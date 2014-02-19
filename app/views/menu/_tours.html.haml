@@ -1,0 +1,69 @@
+#new-tour-button.new-button
+
+#statuses-container
+- in_country_city = {}
+- in_country_city.merge!({:in_city => current_scopes[:in_city]}) if !current_scopes[:in_city].blank?
+- in_country_city.merge!({:in_country => current_scopes[:in_country]}) if !current_scopes[:in_country].blank?
+
+#statuses.x-hidden
+  %ul.options-block
+    %li{all_statuses_class}
+      = link_to 'All', tours_path(in_country_city)
+    %li{status_filter('draft')}
+      = link_to('Draft', tours_path({:draft => true}.merge(in_country_city)))
+    %li{status_filter('building')}
+      = link_to('Building', tours_path({:building => true}.merge(in_country_city)))
+    %li{status_filter('published')}
+      = link_to('Published', tours_path({:published => true}.merge(in_country_city)))
+    %li{status_filter('edited')}
+      = link_to('Edited', tours_path({:edited => true}.merge(in_country_city)))
+    %li{status_filter('failed')}
+      = link_to('Failed', tours_path({:failed => true}.merge(in_country_city)))
+#cities-container
+
+- tags = current_scopes.slice(:tagged_with)
+- tour_status = [:published, :draft, :building, :failed, :edited].detect{|param| current_scopes[param] }
+- tour_status_hash = tour_status.blank? ? {} : {tour_status.to_sym => true}
+
+#cities.x-hidden
+  %ul.options-block
+    %li{:class => "#{"selected" unless current_scopes[:in_country] or current_scopes[:in_city]}"}
+      = link_to "All", tours_path(tour_status_hash.merge(tags))
+    - Tour.regular_tours.by_user(current_user).country_cities.group_by{|l| l.country}.each_pair do |country, cities|
+      %li.country{:class => "#{"selected" if current_scopes[:in_country] == country}"}
+        =  link_to country, tours_path({:in_country => country}.merge(tour_status_hash).merge(tags))
+      - for city in cities
+        %li.city{:class => "#{"selected" if current_scopes[:in_city] == city.city && current_scopes[:in_country] == country}"}
+          = link_to city.city, tours_path({:in_city => city.city, :in_country => country}.merge(tour_status_hash).merge(tags)), :title => city.city
+           
+:javascript
+  Ext.onReady(function() {
+    buttonObject = new Ext.Button({renderTo:'new-tour-button',
+      text: 'Create New Tour',
+      width: 145,
+      handler: function(){location.href = '#{new_tour_url}'}
+    });
+
+    new Ext.Panel({
+      renderTo: 'statuses-container',
+      width: 145,
+      title: 'By Status',
+      contentEl: 'statuses',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+  
+    new Ext.Panel({
+      renderTo: 'cities-container',
+      width: 145,
+      title: 'By cities',
+      contentEl: 'cities',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+  });
+

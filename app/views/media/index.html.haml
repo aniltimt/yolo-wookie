@@ -1,0 +1,272 @@
+= stylesheet_link_tag '/javascripts/extjs/awesome_uploader/AwesomeUploader.css'
+= stylesheet_link_tag '/javascripts/extjs/awesome_uploader/AwesomeUploader Progress Bar.css'
+= stylesheet_link_tag 'layout'
+
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.form.FileUploadField.js"
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.XHRUpload.js"
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/swfupload.js"
+
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.AwesomeUploaderLocalization.js"
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.AwesomeUploader.js"
+= javascript_include_tag "/javascripts/jquery.scrollTo-min.js"
+
+= javascript_include_tag "uploader"
+
+:javascript
+  function editMedia(id) {
+    clearEditForm();
+    var conn = new Ext.data.Connection();
+    conn.request({
+      url: '/media/' + id + '/edit' ,
+      method: 'GET',
+      success: function(responseObject) {
+        eval(responseObject.responseText);
+      },
+      failure: function() {
+      }
+    });
+    return false;
+  }
+
+  function showEditMediaWin() {
+    editMediaWindow.setTitle("Edit Media");
+    Ext.get('media-update-process').hide();
+    Ext.get('upload-error').addClass('x-hidden');
+    document.getElementById('edit_media_form_method').value = "put";
+    editMediaWindow.show();
+  }
+
+  function clearEditForm() {
+    Ext.get('media-update-process').hide();
+    Ext.get('upload-error').addClass('x-hidden');
+    document.getElementById('edit_media_form').reset();
+  }
+
+  function showAddMetaInfoWin() {
+    var media_template = ""
+    var html_for_countries_options = "#{options_for_select(options_for_country).gsub('"', '\"').gsub("\n", "")}";
+    for(var i = 0; i < uploaded_files; i++) {
+      media_template +=
+        "<div style=\"clear:both; padding-top: 30px;\" id=\"uploaded_" + (i) + "\">"+
+          '<div class="media_placeholder">' +
+            '<img class="remove_upload" style="display: none;" src="/javascripts/extjs/awesome_uploader/cross.png" onclick="return removeUploadEntry(this);" />' +
+            "<img class=\"uploaded\" style=\"width:100px;float:left\"/>"+
+            "<input type=\"hidden\" name=\"medium[][position]\" value=\"" + (i) + "\">"+
+          '</div>' +
+          "<div class=\"uploaded_file\">"+
+            "<input class=\"uploaded_path\" type=\"hidden\" name=\"medium[][filepath]\"/>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"name\" class=\"required\">Name</label>"+
+              "<input type=\"text\" required=\"true\" name=\"medium[][name]\" class=\"edit_medium_name\"/>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][tag_list]\">Tag list</label>"+
+              "<input type=\"text\" name=\"medium[][tag_list]\" id=\"media_keywords\" size=\"20\"/>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][country]\" class=\"required\">Country</label>"+
+              "<select required=\"true\" name=\"medium[][country]\" class=\"medium_country\" onchange=\"jQuery(this).parent().parent().find('.medium_city').removeAttr('disabled')\" style=\"width:290px\"></select>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][city]\">City</label>"+
+              "<input type=\"text\" name=\"medium[][city]\" class=\"medium_city\" size=\"20\" disabled=\"disabled\"/>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][credits]\">Credits</label>"+
+              "<textarea name=\"medium[][credits]\" id=\"edit_medium_credits\" rows=\"2\" cols=\"30\"></textarea>"+
+              '<br  />' +
+            "</div>"+
+          "</div>"+
+          '<div style="clear:both;"></div>' +
+        "</div>" +
+        '<div style="clear:both;"></div>';
+    }
+    jQuery('.more_media_preview').html(media_template);
+    jQuery('.medium_country').html(html_for_countries_options);
+    jQuery('.remove_upload').show();
+
+    clearEditForm();
+    //Ext.get("popup-filename-row").addClass('x-hidden');
+    editMediaWindow.setTitle("Upload New Media");
+    document.getElementById('edit_media_form').action = "/media";
+    document.getElementById('edit_media_form_method').value = "post";
+    if(uploaded.length > 0) {
+      jQuery('#edit-media-win .uploaded').map(function(i){
+        jQuery(this).attr(
+          'src',
+          uploaded[i].type == 'picture' ? ('/' + uploaded[i].path) : '/images/icons/' + uploaded[i].type + '.png'
+        );
+      });
+
+      jQuery('#edit-media-win .uploaded_file .edit_medium_name').map(function(i) {
+        var medium_filename = uploaded[i].path.split('/').pop();
+        var medium_name = medium_filename.replace(/(_|-)/gi, " ");
+        var last_dot_occurence = medium_filename.lastIndexOf('.');
+        if(last_dot_occurence != -1) {
+          medium_name = medium_filename.substr(0, last_dot_occurence);
+        }
+        jQuery(this).val(medium_name.replace(/(_|-)/gi, " "));
+      });
+
+      jQuery('#edit-media-win .uploaded_path').map(function(i){
+        jQuery(this).val(uploaded[i].path);
+      });
+    }
+    editMediaWindow.show();
+    set_autocomplete_on_tags_input(); // defined in application.js
+    setTimeout(function() {$('#edit-media-win').parent().scrollTo(0)}, 200);
+  }
+  
+  function removeUploadEntry(element) {
+    el = jQuery(element).parent().parent();
+    id = parseInt(el.attr('id').replace('uploaded_', ''));
+    uploaded.splice(id, 1);
+    el.remove();
+    return false;
+  }
+
+  function deleteMedia(id, link) {
+    var mediaName = document.getElementById('media_name_' + id).innerHTML;
+    if (confirm (mediaName + '\n\nAre you sure you want to delete this media?')) {
+      jQuery.post(link.href, {_method: "delete", authenticity_token: "#{form_authenticity_token}"}, 'script');
+    }
+    return false;
+  }
+
+  function showActionsButtons(value, metaData, record) {
+    var actions = '<a href="#" onclick="editMedia(' + record.data.id + ');" class="edit-link"><div class="left"></div></a>'
+    if (record.data['deletable?'] == true) {
+          actions += '<a href="/media/' + record.data.id + '" onclick="return deleteMedia(' + record.data.id + ', this);" class="delete-link"><div class="left"></div></a>'
+    }
+          actions += '<div class="clear"></div>';
+          return actions;
+  }
+
+  function showMediaName(value, metaData, record, rowIndex, colIndex, store) {
+    metaData.css = "clickable";
+    metaData.attr = 'title="Edit Media"';
+    return '<img src="/images/icons/' + record.data.attachment_type + '.png" align="top"/> <span class="bold" id="media_name_' + record.data.id + '">' + record.data.name + '</span>';
+  }
+
+  function showMediaFileName(value, metaData, record, rowIndex, colIndex, store) {
+    return '<a href="' + record.data.attachment_url + '" target="_blank"/>' + record.data.attachment_file_name + '</a>';
+  }
+
+  function showMediaFileSize(value, metaData, record, rowIndex, colIndex, store) {
+    return record.data.human_size;
+  }
+
+  function showMediaKeywords(value, metaData, record, rowIndex, colIndex, store) {
+    return record.data.tag_list;
+  }
+
+  function showMediaCredits(value, metaData, record, rowIndex, colIndex, store) {
+    return record.data.credits;
+  }
+
+  function showMediaCountry(value, metaData, record, rowIndex, colIndex, store) {
+    return record.data.country;
+  }
+
+  function showMediaCity(value, metaData, record, rowIndex, colIndex, store) {
+    return record.data.city;
+  }
+
+  var perPage = 50;
+
+  var store = new Ext.data.JsonStore({
+    restful: true,
+    fields: [
+      {name: 'id'},
+      {name: 'attachment_type', type: 'string'},
+      {name: 'name', type: 'string'},
+      {name: 'attachment_file_name', type: 'string'},
+      {name: 'human_size', type: 'string'},
+      {name: 'attachment_url', type: 'string'},
+      {name: 'attachment_file_size', type: 'int'},
+      {name: 'tag_list', type: 'string'},
+      {name: 'credits', type: 'string'},
+      {name: 'country', type: 'string'},
+      {name: 'city', type: 'string'},
+      {name: 'deletable?', type: 'boolean'}
+    ],
+    url: "#{current_media_url}.json",
+    root: "media",
+    totalProperty: 'results'
+  });
+  store.load({params: {start:0, limit:perPage}})
+  //store.loadData(mediaJson);
+
+  function split( val ) {
+    return val.split( /,\s*/ );
+  }
+
+  function extractLast( term ) {
+    return split( term ).pop();
+  }
+
+  Ext.onReady(function() {
+    editMediaWindow = new Ext.Window({
+      title: 'Edit Media',
+      closable:true,
+      resizeable: false,
+      width: 550,
+      height: 500,
+      layout: 'fit',
+      plain: true,
+      bodyStyle:'padding:5px;',
+      autoScroll: true,
+      contentEl: 'edit-media-win',
+      hidden: true,
+      modal: true,
+      closeAction: 'hide',
+      bodyCfg: {
+        cls: 'window-background'
+      },
+      fbar: [{
+        text: 'Cancel',
+        handler: function(){closeEditMediaWindow();}
+      },{
+        text: 'Ok',
+        handler: function(){startUpdate();}
+      }]
+    });
+
+    grid = new Ext.grid.GridPanel({
+      store: store,
+      columns: [
+        {id:'name',header: 'Media Name', width: 160, sortable: true, dataIndex: 'name', metadata: {css: 'clickable'}, renderer: showMediaName, menuDisabled: true},
+        {header: 'File Name', width: 200, sortable: true, dataIndex: 'attachment_file_name', renderer: showMediaFileName, menuDisabled: true},
+        {header: 'Tag list', width: 200, sortable: true, dataIndex: 'keywords', renderer: showMediaKeywords, menuDisabled: true},
+        {header: 'Country', width: 100, sortable: true, dataIndex: 'country', renderer: showMediaCountry, menuDisabled: true},
+        {header: 'City', width: 100, sortable: true, dataIndex: 'city', renderer: showMediaCity, menuDisabled: true},
+        {header: 'Credits', width: 200, sortable: true, dataIndex: 'credits', renderer: showMediaCredits, menuDisabled: true},
+        {header: 'Size', width: 75, sortable: true, dataIndex: 'human_size', align: 'right', renderer: showMediaFileSize, menuDisabled: true},
+        {header: 'Actions', width: 75, dataIndex: 'id', renderer: showActionsButtons, sortable: false, fixed: true, menuDisabled: true}
+      ],
+      stripeRows: true,
+      autoExpandColumn: 'name',
+      height: 350,
+      width: '100%',
+      stateful: true,
+      stateId: 'grid',
+      iconCfg: {
+        cls: 'options-block-header'
+      },
+      bbar: new Ext.PagingToolbar({
+            store: store,       // grid and PagingToolbar using same store
+            displayInfo: true,
+            pageSize: perPage,
+            prependButtons: true
+        })
+    });
+
+    grid.on("cellclick",  function(grid, rowIndex, columnIndex, event) {
+      if (columnIndex == 0) {
+        var record = grid.getStore().getAt(rowIndex);
+        editMedia(record.data.id);
+      }
+    });
+  });
+
+= render :partial => "media/edit_media_window"

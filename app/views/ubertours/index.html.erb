@@ -1,0 +1,14 @@
+<% content_for :list_title, 'Ubertours' %>
+<% content_for :details_title, 'Ubertour info' %>
+
+<% content_for :categories_menu do %>
+  <%= render :partial => "menu/ubertours" %>
+<% end %>
+
+<% content_for :loi_list do %>
+  <%= render :partial => "ubertours/index" %>
+<% end %>
+
+<% content_for :loi_info do %>
+  <%= render :partial => 'ubertours/info' %>
+<% end %>

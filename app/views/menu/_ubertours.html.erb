@@ -1,0 +1,85 @@
+<div id="new-tour-button" class="new-button"></div>
+
+<div id="statuses-container"></div>
+<% in_country_city = {} %>
+<% in_country_city.merge!({:in_city => current_scopes[:in_city]}) if !current_scopes[:in_city].blank? %>
+<% in_country_city.merge!({:in_country => current_scopes[:in_country]}) if !current_scopes[:in_country].blank? %>
+
+<div id="statuses" class="x-hidden">
+  <ul class="options-block">
+    <li <%= %w(draft building published failed edited).any?{|k| params[k]} ? '' : 'class="selected"' %>>
+      <%= link_to 'All', url_for({:controller => 'ubertours', :action => 'index'}.merge(in_country_city)) %>
+    </li>
+    <li class="<%= 'draft' + (params['draft'] ? ' selected' : '') %>">
+      <%= link_to('Draft', url_for({:controller => 'ubertours', :action => 'index', :draft => true}.merge(in_country_city))) %>
+    </li>
+    <li class="<%= 'building' + (params['building'] ? ' selected' : '') %>">
+      <%= link_to('Building', url_for({:controller => 'ubertours', :action => 'index', :building => true}.merge(in_country_city))) %>
+    </li>
+    <li class="<%= 'published' + (params['published'] ? ' selected' : '') %>">
+      <%= link_to('Published', url_for({:controller => 'ubertours', :action => 'index', :published => true}.merge(in_country_city))) %>
+    </li>
+    <li class="<%= 'edited' + (params['edited'] ? ' selected' : '') %>">
+      <%= link_to('Edited', url_for({:controller => 'ubertours', :action => 'index', :edited => true}.merge(in_country_city))) %>
+    </li>
+    <li class="<%= 'failed' + (params['failed'] ? ' selected' : '') %>">
+      <%= link_to('Failed', url_for({:controller => 'ubertours', :action => 'index', :failed => true}.merge(in_country_city))) %>
+    </li>
+  </ul>
+</div>
+
+<div id="cities-container"></div>
+
+<% tags = current_scopes.slice(:tagged_with) %>
+<% ubertour_status = [:published, :draft, :building, :failed, :edited].detect{|param| current_scopes[param] } %>
+<% ubertour_status_hash = ubertour_status.blank? ? {} : {ubertour_status.to_sym => true} %>
+
+<div id="cities" class="x-hidden">
+  <ul class="options-block">
+    <li class="<%= "selected" unless current_scopes[:in_country] or current_scopes[:in_city] %>">
+      <%= link_to "All", url_for({:controller => 'ubertours', :action => 'index'}.merge(ubertour_status_hash.merge(tags))) %>
+    </li>
+    <% Tour.ubertours.by_user(current_user).country_cities.group_by{|l| l.country}.each_pair do |country, cities| %>
+      <li class="country <%= "selected" if current_scopes[:in_country] == country %>">
+        <%= link_to country, url_for({:controller => 'ubertours', :action => 'index', :in_country => country}.merge(ubertour_status_hash).merge(tags)) %>
+      </li>
+      <% cities.reject{|city| city.city.blank? }.each do |city| %>
+        <li class="city <%= "selected" if current_scopes[:in_city] == city.city && current_scopes[:in_country] == country %>">
+          <%= link_to city.city, url_for({:controller => 'ubertours', :action => 'index', :in_city => city.city, :in_country => country}.merge(ubertour_status_hash).merge(tags)), :title => city.city %>
+        </li>
+      <% end %>
+    <% end %>
+  </ul>
+</div>
+      
+<script type="text/javascript">
+  Ext.onReady(function() {
+    buttonObject = new Ext.Button({renderTo:'new-tour-button',
+      text: 'Create New Ubertour',
+      width: 145,
+      handler: function(){ location.href = '/ubertours/new' }
+    });
+
+    new Ext.Panel({
+      renderTo: 'statuses-container',
+      width: 145,
+      title: 'By Status',
+      contentEl: 'statuses',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+  
+    new Ext.Panel({
+      renderTo: 'cities-container',
+      width: 145,
+      title: 'By cities',
+      contentEl: 'cities',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+  });
+</script>

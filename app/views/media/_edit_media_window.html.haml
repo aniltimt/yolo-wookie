@@ -1,0 +1,16 @@
+%input.current_user_id{:type => "hidden", :value => current_user.id}
+#edit-media-win.x-hidden
+  - form_for(:medium, :html => {:multipart => true, :id => 'edit_media_form', :target => 'upload_target', :method => 'post'}) do |f|
+    %input{:type => 'hidden', :name => '_method', :value => 'post', :id => 'edit_media_form_method'}
+
+    .clear
+    .more_media_preview
+    %p.hidden{:id => 'media-update-process'}
+      Loading...
+      %img{:src => '/images/spinner.gif'}
+    #upload-error.error.right.x-hidden
+    .clear
+  %iframe.hidden-iframe{:id => 'upload_target', :name => 'upload_target', :src => '#'}
+  %form.x-hidden{:method => 'post', :id => 'media_delete_form'}
+    %input{:type => 'hidden', :name => '_method', :value => 'delete'}
+    %input{:type => 'hidden', :name => 'authenticity_token', :value => form_authenticity_token}

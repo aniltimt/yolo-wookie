@@ -1,0 +1,18 @@
+.logo
+  %img{:src => '/images/logo.jpg', :title => 'Digital Footsteps', :alt => 'Digital Footsteps'}
+  = show_build_info if !Rails.env.production?
+.top-area
+  .title
+    .left
+      /%img{:src => '/images/df-title.jpg', :title => 'Digital Footsteps', :alt => 'Digital Footsteps'}
+    .management-title
+      %img{:src => '/images/df-tourmanagement.jpg', :title => 'Tour Management', :alt => 'Tour Management', :align => 'top'}
+    .clear
+  .navigation-bar
+    = render :partial => "layouts/navigation"
+.account-info
+  logged as
+  = current_user.login
+  |
+  <a href="#{destroy_user_session_path}">logout</a>
+.clear

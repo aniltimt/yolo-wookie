@@ -1,0 +1,438 @@
+<html>
+<head>
+<title>Ext JS Awesome Uploader</title>
+<link rel="stylesheet" type="text/css" href="../../../stylesheets/ext-all.css" />
+<link rel="stylesheet" type="text/css" href="Ext.ux.form.FileUploadField.css" />
+<link rel="stylesheet" type="text/css" href="AwesomeUploader.css" />
+<link rel="stylesheet" type="text/css" href="AwesomeUploader Progress Bar.css" />
+</head>
+<style>
+body {
+	margin: 40px;
+	font-family: arial;
+}
+pre {
+	background: none;
+	font-family: Courier New, Lucida Console;
+	font-style: normal;
+}
+</style>
+<body>
+<h1>Awesome Uploader (Ext JS Component)</h1>
+<BR>
+This is a 3-in-1 uploader that uses Firefox 3.6+ / Chrome 5+ <b>drag and drop</b>, flash-based <a href="http://www.swfupload.org/">swfupload</a>, or a standard HTML file upload field to give the best user experience possible for file uploads.<BR>
+<BR>
+<h2>Features:</h2>
+Multiple simultaneous uploads (via drag and drop and standard file upload only)<BR>
+Progress bar (Drag and Drop and Flash based upload only)<BR>
+Very extensible<BR>
+<BR>
+The PHP required to handle these uploads (the same code that powers this page) is also included!<BR>
+<BR>
+The Awesome Uploader detects if flash is available, using swfupload to allow a multiple file selection dialogue. If flash is not available a normal HTML file upload field is used.<BR>
+<BR>
+Drag and drop uploads use <a href="http://www.w3.org/TR/XMLHttpRequest2/">XMLHttpRequest2</a> and the <a href="http://www.w3.org/TR/FileAPI/">File API</a> to send files as the raw body of the request. <b>NOTE: This is different from standard multi-part form uploads!</b><BR>
+SWFUpload and HTML file uploads use standard multi-part form uploads.<BR>
+<BR>
+For all uploads, the server response should be a JSON object with a success property. If there is an error, there should also be an "error" property.<BR>
+If all uploads succeed: {"success":true}<BR>
+If an upload fails: {"success":false,"error":"Reason for error!"}<BR>
+Upon failure, the "Reason for error!" part will be displayed in a message box.<BR>
+<BR>
+<script type="text/javascript" src="../adapter/ext/ext-base-debug.js"></script>
+<script type="text/javascript" src="../ext-all.js"></script>
+
+<script type="text/javascript" src="Ext.ux.form.FileUploadField.js"></script>
+<script type="text/javascript" src="Ext.ux.XHRUpload.js"></script>
+<script type="text/javascript" src="swfupload.js"></script>
+<!-- <script type="text/javascript" src="swfupload.swfobject.js"></script> -->
+<script type="text/javascript" src="Ext.ux.AwesomeUploaderLocalization.js"></script>
+<script type="text/javascript" src="Ext.ux.AwesomeUploader.js"></script>
+<script type="text/javascript">
+
+Ext.BLANK_IMAGE_URL = '/inc/js/ext-3.2.1/resources/images/default/s.gif';
+
+Ext.onReady(function(){
+
+var AwesomeUploaderInstance3 = new Ext.Window({
+		title:'Awesome Uploader in a Window!'
+		,closeAction:'hide'
+		,frame:true
+		,width:500
+		,height:200
+		,items:{
+			xtype:'awesomeuploader'
+			,gridHeight:100
+			,height:160
+			,awesomeUploaderRoot:'/awesomeuploader/'
+			,listeners:{
+				scope:this
+				,fileupload:function(uploader, success, result){
+					if(success){
+						Ext.Msg.alert('File Uploaded!','A file has been uploaded!');
+					}
+				}
+			}
+		}
+	});
+	var AwesomeUploaderInstance3button = new Ext.Panel({
+		renderTo:'container1'
+		,frame:true
+		,width:250
+		,height:75
+		,items:{
+			xtype:'button',
+			text:'Show Uploader Window',
+			handler:function(){
+				AwesomeUploaderInstance3.show();
+			}
+		}
+	});
+
+	Ext.QuickTips.init();
+	
+	/*
+	uploadGridColumns = [
+		{name:'id'}
+		,{name:'name'}
+		,{name:'size'}
+		,{name:'status'}
+		,{name:'progress'}
+	];
+	*/
+		
+	var statusIconRenderer = function(value){
+		switch(value){
+			default:
+				return value;
+			case 'Pending':
+				return '<img src="/inc/img/hourglass.png" width=16 height=16>';
+			case 'Sending':
+				return '<img src="/inc/img/loading.gif" width=16 height=16>';
+			case 'Error':
+				return '<img src="/inc/img/cross.png" width=16 height=16>';
+			case 'Cancelled':
+			case 'Aborted':
+				return '<img src="/inc/img/cancel.png" width=16 height=16>';
+			case 'Uploaded':
+				return '<img src="/inc/img/tick.png" width=16 height=16>';
+		}
+	},
+	
+	progressBarColumnTemplate = new Ext.XTemplate(
+		'<div class="ux-progress-cell-inner ux-progress-cell-inner-center ux-progress-cell-foreground">',
+			'<div>{value} %</div>',
+		'</div>',
+		'<div class="ux-progress-cell-inner ux-progress-cell-inner-center ux-progress-cell-background" style="left:{value}%">',
+			'<div style="left:-{value}%">{value} %</div>',
+		'</div>'
+    ),
+    
+	progressBarColumnRenderer = function(value, meta, record, rowIndex, colIndex, store){
+        meta.css += ' x-grid3-td-progress-cell';
+		return progressBarColumnTemplate.apply({
+			value: value
+		});
+	},
+	
+	updateFileUploadRecord = function(id, column, value){
+		var rec = fileUploadPanel.awesomeUploaderGrid.store.getById(id);
+		rec.set(column, value);
+		rec.commit();
+	};
+	
+	var fileUploadPanel = new Ext.Panel({
+		title:'Ext JS Super Uploader'
+		,renderTo:'container1'
+		,frame:true
+		,width:500
+		,height:300
+		,items:[
+		{
+			xtype:'awesomeuploader'
+			,ref:'awesomeUploader'
+			,extraPostData:{
+				'key':'value'
+				,'test':'testvalue'
+			}
+			,height:40
+			,allowDragAndDropAnywhere:true
+			,autoStartUpload:false
+			,maxFileSizeBytes: 15 * 1024 * 1024 // 15 MiB
+			,listeners:{
+				scope:this
+				,fileselected:function(awesomeUploader, file){
+				/*
+					file will at minimum be:
+					file = {
+						name: fileName
+						,method: "swfupload" //(can be "swfupload", "standard", "dnd"
+						,id: 1 // a unique identifier to abort or remove an individual file, incrementing int
+						,status: "queued" // file status. will always be queued at this point
+						// if swfupload or dnd or standard upload on a modern browser (supports the FILE API) is used, size property will be set:
+						,size: 12345 // file size in bytes
+					}
+				*/
+				
+					//Example of cancelling a file to be selection
+					if( file.name == 'image.jpg' ){	
+						Ext.Msg.alert('Error','You cannot upload a file named "image.jpg"');
+						return false;
+					}
+					
+					fileUploadPanel.awesomeUploaderGrid.store.loadData({
+						id:file.id
+						,name:file.name
+						,size:file.size
+						,status:'Pending'
+						,progress:0
+					}, true);
+				}
+				,uploadstart:function(awesomeUploader, file){
+				
+					updateFileUploadRecord(file.id, 'status', 'Sending');
+				}
+				,uploadprogress:function(awesomeUploader, fileId, bytesComplete, bytesTotal){
+				
+					updateFileUploadRecord(fileId, 'progress', Math.round((bytesComplete / bytesTotal)*100) );
+				}
+				,uploadcomplete:function(awesomeUploader, file, serverData, resultObject){
+					//Ext.Msg.alert('Data returned from server'+ serverData);
+					
+					try{
+						var result = Ext.util.JSON.decode(serverData);//throws a SyntaxError.
+					}catch(e){
+						resultObject.error = 'Invalid JSON data returned';
+						//Invalid json data. Return false here and "uploaderror" event will be called for this file. Show error message there.
+						return false;
+					}
+					resultObject = result;
+					
+					if(result.success){
+						updateFileUploadRecord(file.id, 'progress', 100 );
+						updateFileUploadRecord(file.id, 'status', 'Uploaded' );
+					}else{
+						return false;
+					}
+					
+				}
+				,uploadaborted:function(awesomeUploader, file ){
+					updateFileUploadRecord(file.id, 'status', 'Aborted' );
+				}
+				,uploadremoved:function(awesomeUploader, file ){
+					
+					fileUploadPanel.awesomeUploaderGrid.store.remove(fileUploadPanel.awesomeUploaderGrid.store.getById(file.id) );
+				}
+				,uploaderror:function(awesomeUploader, file, serverData, resultObject){
+					resultObject = resultObject || {};
+					
+					var error = 'Error! ';
+					if(resultObject.error){
+						error += resultObject.error;
+					}
+					
+					updateFileUploadRecord(file.id, 'progress', 0 );
+					updateFileUploadRecord(file.id, 'status', 'Error' );
+					
+				}
+			}
+		},{
+			xtype:'grid'
+			,ref:'awesomeUploaderGrid'
+			,width:420
+			,height:200
+			,enableHdMenu:false
+			,tbar:[
+			{
+				text:'Start Upload'
+				,icon:'/inc/img/tick.png'
+				,scope:this
+				,handler:function(){
+					fileUploadPanel.awesomeUploader.startUpload();
+				}
+			},{
+				text:'Abort'
+				,icon:'/inc/img/cancel.png'
+				,scope:this
+				,handler:function(){
+					var selModel = fileUploadPanel.awesomeUploaderGrid.getSelectionModel();
+					if(!selModel.hasSelection()){
+						Ext.Msg.alert('','Please select an upload to cancel');
+						return true;
+					}
+					var rec = selModel.getSelected();
+					fileUploadPanel.awesomeUploader.abortUpload(rec.data.id);
+				}
+			},{
+				text:'Abort All'
+				,icon:'/inc/img/cancel.png'
+				,scope:this
+				,handler:function(){
+					fileUploadPanel.awesomeUploader.abortAllUploads();
+				}
+			},{
+				text:'Remove'
+				,icon:'/inc/img/cross.png'
+				,scope:this
+				,handler:function(){
+					var selModel = fileUploadPanel.awesomeUploaderGrid.getSelectionModel();
+					if(!selModel.hasSelection()){
+						Ext.Msg.alert('','Please select an upload to cancel');
+						return true;
+					}
+					var rec = selModel.getSelected();
+					fileUploadPanel.awesomeUploader.removeUpload(rec.data.id);
+				}
+			},{
+				text:'Remove All'
+				,icon:'/inc/img/cross.png'
+				,scope:this
+				,handler:function(){
+					fileUploadPanel.awesomeUploader.removeAllUploads();
+				}
+			}]
+			,store:new Ext.data.JsonStore({
+				fields: ['id','name','size','status','progress']
+    			,idProperty: 'id'
+			})
+			,columns:[
+				{header:'File Name',dataIndex:'name', width:150}
+				,{header:'Size',dataIndex:'size', width:60, renderer:Ext.util.Format.fileSize}
+				,{header:'&nbsp;',dataIndex:'status', width:30, renderer:statusIconRenderer}
+				,{header:'Status',dataIndex:'status', width:60}
+				,{header:'Progress',dataIndex:'progress', renderer:progressBarColumnRenderer}
+			]
+		}]
+	});
+});
+</script>
+<b>If you are using firefox 3.6+ or Chrome 5+, drag a file from your desktop into here:</b><BR>
+<div id="container1"></div>
+<BR>
+<BR>
+<BR>
+<h2>Configuration Options & Defaults</h2>
+<style type="text/css">.
+table.au-propstable {
+	border-collapse:collapse;
+	border-spacing: 0px 0px;
+}
+td.au-prop, td.au_value, td.au_desc {
+	padding: 2px;
+	border-spacing: 0px 0px;
+	border: 1px solid black;
+	border-collapse:collapse;
+}
+tr.au-head {
+	font-weight:bolder;
+}
+td.au-prop  {
+	text-align:left;
+	font-weight: bolder;
+}
+td.au_value  {
+	text-align:left;
+}
+td.au_desc  {
+	text-align:left;
+}
+</style>
+<table class="au-propstable">
+<tr class="au-head"><td class="au-prop">Configuration</td><td class="au_value">Default Value</td><td class="au_desc">Description</td></tr>
+<tr><td class="au-prop">awesomeUploaderRoot</td><td class="au_value">""</td><td class="au_desc">Path to all awesomeuploader resources. This is added to beginning of the path of all resources.</td></tr>
+<tr><td class="au-prop">maxFileSizeBytes</td><td class="au_value">3145728 (3 MiB)</td><td class="au_desc">Maximum file size in bytes</td></tr>
+<tr><td class="au-prop">autoStartUpload</td><td class="au_value">false</td><td class="au_desc">Auto start uploads as soon as a file is seleted.</td></tr>
+<tr><td class="au-prop">alwaysShowFullFilePath</td><td class="au_value">false</td><td class="au_desc">If full file path is available, do not strip out the path. e.g. If file selected is "C:\FileToUpload.jpg" file name will be "FielToUpload.jpg"</td></tr>
+<tr><td class="au-prop">supressPopups</td><td class="au_value">false</td><td class="au_desc">Do not show built-in Awesome Uploader popups like "This file is too big" or "Error uploading file".</td></tr>
+<tr><td class="au-prop">allowDragAndDropAnywhere</td><td class="au_value">false</td><td class="au_desc">Allows dropping files anywhere onto the page.</td></tr>
+<tr><td class="au-prop">extraPostData</td><td class="au_value">{ }</td><td class="au_desc">Object of additional post data to send along with upload</td></tr>
+<tr><td class="au-prop" colspan=3><B>NOTE:</b> For drag and drop uploads, extraPostData only works in Firefox 3.6+, Chrome 6+.<BR><BR><b>WHY?</b> multipart/form-data uploads (required to add additional parameters) requires the File API, which is only supported by Firefox 3.6+ & Chrome 6+.</td></tr>
+<tr><td class="au-prop">xhrSendMultiPartFormData</td><td class="au_value">false</td><td class="au_desc">Send multipart/form-data uploads for drag and drop rather than sending the file as the entire request body. Only Firefox 3.6 compatible. See above note.</td></tr>
+<tr><td class="au-prop">xhrFilePostName</td><td class="au_value">"Filedata"</td><td class="au_desc">Name of post parameter for drag and drop file upload. Only used if xhrSendMultiPartFormData=true. See above note.</td></tr>
+<tr><td class="au-prop">disableFlash</td><td class="au_value">22</td><td class="au_desc">Disable flash based uploader (swfupload)</td></tr>
+<tr><td class="au-prop">flashButtonHeight</td><td class="au_value">22</td><td class="au_desc">Height of flash button</td></tr>
+<tr><td class="au-prop">flashButtonWidth</td><td class="au_value">56</td><td class="au_desc">Width of flash button</td></tr>
+<tr><td class="au-prop">flashButtonSprite</td><td class="au_value">awesomeUploaderRoot + "swfupload_browse_button_trans_56x22.PNG"</td><td class="au_desc">Sprite used for flash button, contains 4 sections for normal, over, pressed, & disabled</td></tr>
+<tr><td class="au-prop">flashUploadFilePostName</td><td class="au_value">"Filedata"</td><td class="au_desc">POST variable name for flash name</td></tr>
+<tr><td class="au-prop">flashSwfUploadPath</td><td class="au_value">awesomeUploaderRoot + "swfupload.swf"</td><td class="au_desc">path to swfupload.swf file</td></tr>
+<tr><td class="au-prop">flashSwfUploadFileTypes</td><td class="au_value">"*.*"</td><td class="au_desc">File name mask for file types allowed by swfupload</td></tr>
+<tr><td class="au-prop">flashSwfUploadFileTypesDescription</td><td class="au_value">"All Files"</td><td class="au_desc">Description of above mask</td></tr>
+<tr><td class="au-prop">flashUploadUrl</td><td class="au_value">awesomeUploaderRoot + "upload.php"</td><td class="au_desc">URL that swfupload should send file to</td></tr>
+<tr><td class="au-prop">gridWidth</td><td class="au_value">420</td><td class="au_desc">grid width of file list</td></tr>
+<tr><td class="au-prop">gridHeight</td><td class="au_value">200</td><td class="au_desc">grid height of file list</td></tr>
+<tr><td class="au-prop">standardUploadFilePostName</td><td class="au_value">"Filedata"</td><td class="au_desc">POST variable name for standard uploader</td></tr>
+<tr><td class="au-prop">standardUploadUrl</td><td class="au_value">awesomeUploaderRoot + "upload.php"</td><td class="au_desc">URL that stanard file upload should send file to</td></tr>
+<tr><td class="au-prop">standardButtonText</td><td class="au_value">"Browse..."</td><td class="au_desc">URL that stanard file upload should send file to</td></tr>
+<tr><td class="au-prop">xhrFileNameHeader</td><td class="au_value">"X-File-Name"</td><td class="au_desc">Header name used to send file name for drag and drop (XHR2) upload</td></tr>
+<tr><td class="au-prop">xhrExtraPostDataPrefix</td><td class="au_value">"extraPostData_"</td><td class="au_desc">Header name used to send file name for drag and drop (XHR2) upload</td></tr>
+<tr><td class="au-prop">xhrUploadUrl</td><td class="au_value">awesomeUploaderRoot + "xhrupload.php"</td><td class="au_desc">URL that drag and drop (XHR2) upload should send file to</td></tr>
+</table>
+<BR>
+<BR>
+<h2>Events</h2>
+<table class="au-propstable">
+<tr><td class="au-prop">fileselected</td><td class="au_value">A file is selected. Returns file object. Return false to prevent this file from being queued.</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Object file<BR>
+file will at minimum be:<BR>
+file = {<BR>
+name: fileName<BR>
+,method: "swfupload" //(can be "swfupload", "standard", "dnd"<BR>
+,id: 1 // a unique identifier to abort or remove an individual file, incrementing int<BR>
+,status: "queued" // file status. will always be queued at this point<BR>
+// if swfupload or dnd or standard upload on a modern browser (supports the FILE API) is used, size property will be set:<BR>
+,size: 12345 // file size in bytes<BR>
+}<BR>
+<BR>
+Return false to prevent file from being queued!
+</td></tr>
+<tr><td class="au-prop">fileselectionerror</td><td class="au_value">A file was selected that is larger than the maxiumum allowed</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Object file</td></tr>
+<tr><td class="au-prop">uploadstart</td><td class="au_value">Uploading has started</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Object file</td></tr>
+<tr><td class="au-prop">uploadprogress</td><td class="au_value">For Flash + Drag and Drop uploads only! As the file is uploaded, progres events will come in for each file.</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Int fileId, bytesComplete, bytesTotal<BR>
+fileId will match the id from the file object in the uploadstart event</td></tr>
+<tr><td class="au-prop">uploadcomplete</td><td class="au_value">A file has finished uploading. Process the server result to see if it was successful. Return false if unsuccessful.</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Object file, String serverData, Object resultObject<BR>
+serverData will contain the server response. Process it at this event to detemine if the upload was successful. If the upload filed, return false here. You can also set resultObject.error to a descriptive error that will be passed to the uploaderror event.</td></tr>
+<tr><td class="au-prop">uploadremoved</td><td class="au_value">A file has been removed from the upload queue</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Object file</td></tr>
+<tr><td class="au-prop">uploadaborted</td><td class="au_value">A file upload has been aborted while uploading</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Object file</td></tr>
+<tr><td class="au-prop">uploaderror</td><td class="au_value">An error has occurred when upoading the file. Also fires when you return false from the uploadcomplete event</td></tr>
+<tr><td class="au_value" colspan=2>Parameters: Object awesomeUploaderInstance, Object file, Object resultObject<BR>
+resultObject.error will contain the text you set in the uploadcomplete event</td></tr>
+</table>
+<BR>
+<h2>Released under BSD License</h2>
+<hr style="width:50%; text-align:left; margin: 0 auto 0 0;">
+<BR>
+Awesome Uploader<BR>
+<BR>
+Copyright (c) 2010, Andrew Rymarczyk<BR>
+All rights reserved.<BR>
+<BR>
+Redistribution and use in source and minified, compiled or otherwise obfuscated <BR>
+form, with or without modification, are permitted provided that the following <BR>
+conditions are met:<BR>
+<BR>
+&nbsp;&nbsp;* Redistributions of source code must retain the above copyright notice, <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this list of conditions and the following disclaimer.<BR>
+&nbsp;&nbsp;* Redistributions in minified, compiled or otherwise obfuscated form must <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reproduce the above copyright notice, this list of conditions and the <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;following disclaimer in the documentation and/or other materials <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;provided with the distribution.<BR>
+<BR>
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND <BR>
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED <BR>
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE <BR>
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE <BR>
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL <BR>
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR <BR>
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER <BR>
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,<BR> 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE<BR> 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.<BR>
+<BR>
+<hr style="width:50%; text-align:left; margin: 0 auto 0 0;">
+<BR>

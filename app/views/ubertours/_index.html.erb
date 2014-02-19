@@ -1,0 +1,61 @@
+<% if @ubertours.empty? %>
+  <span class="remark">No ubertours yet</span>
+<% else %>
+  <ul class="tour-list">
+    <%= render :partial => 'ubertour', :collection => @ubertours %>
+  </ul>
+<% end %>
+
+<script type="text/javascript">
+  function getLocationsList(btn){
+    btn = Ext.get(btn);
+    currentTour = btn.findParent("li", 10, true);
+
+    return currentTour.child(".tour-locations-list");
+  }
+
+  function toggleMinMaxButtons(btn){
+    btn = Ext.get(btn);
+    currentTour = btn.findParent("li", 10, true);
+    maxBtn = currentTour.child(".maximize-btn");
+    if(btn != maxBtn)
+      othrBtn = maxBtn;
+    else
+      othrBtn = currentTour.child(".minimize-btn");
+
+    btn.setVisibilityMode(Ext.Element.DISPLAY);
+    othrBtn.setVisibilityMode(Ext.Element.DISPLAY);
+
+    btn.hide();
+    othrBtn.show();
+  }
+
+  function minimize(minBtn){
+    toggleMinMaxButtons(minBtn);
+    locationsList = getLocationsList(minBtn);
+
+    locationsList.setVisibilityMode(Ext.Element.DISPLAY);
+
+    locationsList.hide();
+
+    return false;
+  }
+
+  function maximize(maxBtn){
+    toggleMinMaxButtons(maxBtn);
+    locationsList = getLocationsList(maxBtn);
+
+    locationsList.setVisibilityMode(Ext.Element.DISPLAY);
+
+    locationsList.show();
+
+    return false;
+  }
+  
+  // Very stupid hack
+  setTimeout(function() {
+    if($('#list-panel').find('.active').length !== 0) {
+      $('#list-panel').parent().scrollTo($('#list-panel').find('.active'));
+    }
+  }, 500);
+</script>

@@ -1,0 +1,24 @@
+-# .location
+-#   - form_for @location, :html => {:id => "location-edit-form", :multipart => true} do |location_form|
+-#     = location_form.error_messages
+-#     = render :partial => 'form', :locals => {:f => location_form}
+-#     = location_form.submit 'Save', :id => "save1"
+-#     %ul
+-#       - for medium in Medium.all
+-#         %li
+-#           = link_to medium.name, medium.attachment.url
+-#           = check_box_tag 'location[medium_ids][]', medium.id, @location.media.include?(medium)
+
+-#     = location_form.submit 'Save', :id => "save2"
+
+- content_for :list_title, 'Locations'
+- content_for :details_title, 'LOI info'
+- content_for :categories_menu do
+  = render :partial => "menu/locations"
+- content_for :loi_list do
+  = render :partial => "locations/index"
+
+- content_for :loi_info do
+  - form_for resource, :html => {:multipart => true, :id => 'new_location'}, :id => 'new_location' do |f|
+    = render :partial => 'form', :locals => {:f => f}
+  = render :partial => "media/edit_media_window"

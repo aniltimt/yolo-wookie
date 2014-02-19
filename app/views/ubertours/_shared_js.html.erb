@@ -1,0 +1,57 @@
+  var added_tour_list = [],
+    layers_for_markers = [],
+    layers_for_polylines = [];
+
+  function show_tours_on_the_maps(ui) {
+    var colors = [{name: 'red', value: '#F02311'}, {name: 'blue', value: '#1693A5'}, {name: 'green', value: '#A1C820'}, {name: 'orange', value: '#FF6600'}, {name: 'crimson', value: '#F3266C'}, {name: 'black', value: '#000000'}];
+    var its_ubertour_show_page = (jQuery('.tours-list').length > 0);
+    var its_create_ubertour_page = (jQuery('.selected_tours.ui-sortable li').length > 0);
+    var tours_li_on_show_page = jQuery('.tours-list li');
+    var selected_tours_on_create_page = jQuery('.selected_tours.ui-sortable li');
+
+    for(var i = 0; i < layers_for_polylines.length; i++) { map.removeLayer(layers_for_polylines[i]); }
+    for(var i = 0; i < layers_for_markers.length; i++) { map.removeLayer(layers_for_markers[i]); }
+
+    jQuery.post('/tours/get_coordinates_for_tours', {authenticity_token: "<%= form_authenticity_token %>", ids: added_tour_list}, function(response) {
+      var bounds_points_array = [];
+      if(response) {
+        for(var i = 0; i < response.length; i++) {
+          var tour = response[i];
+          var tours_points = [];
+          var random_color = colors[i % colors.length];
+
+          for(var j = 0; j < tour.length; j++) {
+            var latlng = new L.LatLng(tour[j][0], tour[j][1]);
+            bounds_points_array.push(latlng);
+            tours_points.push(latlng);
+            var MyIcon = L.Icon.extend({
+              iconUrl: "/javascripts/leaflet/images/marker_"+random_color['name']+".png",
+              shadowUrl: '/javascripts/leaflet/images/marker-shadow.png',
+              iconSize: new L.Point(25, 41),
+              iconAnchor: new L.Point(12, 41)
+            });
+            var icon = new MyIcon();
+            var local_marker = new L.Marker(latlng, {icon: icon});
+            map.addLayer(local_marker);
+            layers_for_markers.push(local_marker);
+          }
+
+          // create a polyline with random color from an arrays of LatLng points
+          var polyline = new L.Polyline(tours_points, {color: random_color['value']});
+          if(ui) {
+            jQuery(ui.item[0]).css({color: random_color['value']});
+          }
+          if(its_ubertour_show_page) {
+            jQuery(tours_li_on_show_page[i]).css({color: random_color['value']});
+          } else if(its_create_ubertour_page) {
+            jQuery(selected_tours_on_create_page[i]).css({color: random_color['value']});
+          }
+          // add the polyline to the map
+          map.addLayer(polyline);
+          layers_for_polylines.push(polyline);
+        }
+
+        map.fitBounds(new L.LatLngBounds(bounds_points_array));
+      }
+    });
+  }

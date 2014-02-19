@@ -1,0 +1,853 @@
+= stylesheet_link_tag '/javascripts/extjs/awesome_uploader/AwesomeUploader.css'
+= stylesheet_link_tag '/javascripts/extjs/awesome_uploader/AwesomeUploader Progress Bar.css'
+
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.form.FileUploadField.js"
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.XHRUpload.js"
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/swfupload.js"
+
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.AwesomeUploaderLocalization.js"
+= javascript_include_tag "/javascripts/extjs/awesome_uploader/Ext.ux.AwesomeUploader.js"
+
+= javascript_include_tag "uploader"
+
+#overview-container
+  #overview-block.x-hidden
+    %span{:style => 'color: red;'}
+      Fields marked with * are required
+    %p= f.error_messages
+    .form-row
+      = f.label :name, 'Location name', :class => 'required'
+      = f.text_field :name
+
+      = f.hidden_field :is_draft
+    .form-row
+      = f.label :country, nil, :class => 'required'
+      = f.select :country, options_for_select(options_for_country, f.object.country), {}, {:onchange => "jQuery('#location_city').val(''); check_city_bbox('location'); zoom_to_selected_country_enable_city_disable_address()", :style => "width:350px;", :class => "chzn-select"}
+    .form-row
+      = f.label :city, nil, :class => 'required'
+      = f.text_field :city, :onchange => "check_city_bbox('location');zoom_to_selected_city()", :disabled => (f.object.new_record? && f.object.city.blank?)
+      #location_city_message{:style => "display:none;border:1px solid red;padding:5px;width:270px;margin-top:-10px;float:left;"}
+    .form-row
+      = f.label :street, 'Street'
+      = f.text_field :street, :id => "geocoded_street", :style => "width:200px", :disabled => (f.object.new_record? && f.object.street.blank?)
+      = f.label :building, 'Building #', :style => "width:70px"
+      = f.text_field :building, :id => "geocoded_building", :style => "width:50px", :disabled => (f.object.new_record? && f.object.building.blank?)
+
+      = button_to_function "Find address", "geocode_request({show_list_with_results: true})", :style => "width:85px;margin-left:20px"
+      .geocoded_items{:style => "width:300px;display:none"}
+        %ul.ui-menu.ui-widget.ui-widget-content.ui-corner-all{:style => "width:400px;margin-left:121px;"}
+    .form-row
+      = f.label :lat, 'Lat', :class => 'required'
+      = f.text_field :lat, :class => 'short'
+      = f.label :lng, 'Lon', :class => 'required', :style => "width:43px;"
+      = f.text_field :lng, :class => 'short'
+      = button_to_function "Find by coords", "reverse_geocode_request(jQuery('#location_lat').val(), jQuery('#location_lng').val())", :style => "width:118px;margin-left:20px"
+
+#map-container{:style => "width:750px;margin-left:25px;"}
+  #map-block.x-hidden 
+  
+#details-container
+  #details-block.x-hidden
+    .form-image-row.form-row
+      = f.label :thumbnail, nil, :class => 'required'
+      - if !f.object.thumbnail.url.blank? && f.object.thumbnail.url.to_s != "/thumbnails/original/missing.png"
+        .form-image-thumb
+          = image_tag f.object.thumbnail.url, :id => "location_thumb_img", :size => "55x55"
+          = f.hidden_field :thumbnail_cache
+      = f.file_field :thumbnail, :class => "file", :size => "24", :onChange => "var previewImage = document.getElementById('location_thumb_img'); try {previewImage.src = this.files.item(0).getAsDataURL()} catch(err) {previewImage.src = this.value}"
+    .form-row
+      = f.label :comment, nil, :class => 'required'
+      = f.text_field :comment
+    .form-row
+      = f.label :category_list, 'Categories'
+      -# categories = f.object.new_record? ? params[:tagged_with] : f.object.category_list
+      = f.text_field :category_list, :value => f.object.category_list
+    .form-short-textarea-row.form-row
+      = f.label :short_description
+      = f.text_area :short_description
+    .form-row
+      = f.label :phone
+      = f.text_field :phone
+    .form-row
+      = f.label :website
+      = f.text_field :website
+    .form-row
+      = f.label :email
+      = f.text_field :email
+    .form-row
+      = f.label :opening_hours
+      = f.text_field :opening_hours
+    .form-row
+      = f.label :entrance_fee
+      = f.text_field :entrance_fee
+    .form-row
+      = f.label :nearest_transport, 'Nearest Tube st.'
+      = f.text_field :nearest_transport
+    .form-textarea-row.form-row
+      = f.label :full_description, 'Long description', :class => 'required'
+      = f.text_area :full_description
+#media-container
+  #media-block.x-hidden
+    -#upload-new-media-button.button-container
+    -#.text{:style => 'float:left;padding-top:7px;'} or
+    #add-existing-media-button.button-container
+    #upload-new-media-button.button-container
+    .clear
+    #media-list
+      .table-list#media-list-table
+        = hidden_field_tag 'location[medium_ids][]', ""
+        - resource.media.each do |medium|
+          %a.media-row{:id => "media_row_#{medium.id}"}
+            .media-actions
+              .left.media-size= number_to_human_size(medium.attachment_file_size)
+              .delete-link.left{:href => '#', :onclick => "return deleteMedia(#{medium.id});"}
+                .left
+            .media-name{:class => "media-type-#{medium_css_class(medium)}"}
+              = hidden_field_tag 'location[medium_ids][]', medium.id, :class => 'selected_medium'
+              %span= medium.name
+            .clear
+        - if resource.media.empty?
+          %span.remark.media-row.empty-row No Media attached.
+
+:javascript
+
+  /*$("#geocoded_street").keyup(function(event){
+    if(event.keyCode == 13){
+      geocode_request({show_list_with_results: true})
+    }
+  });*/
+
+  var last_geocoded_result;
+  var reverse_options_for_country = {#{reverse_options_for_country}};
+  var country_to_code_hash = {#{country_to_code_hash}};
+  var pin_dropped_manually = false;
+
+  function change_geocoded_item(index) {
+    markerLatLng = new L.LatLng(last_geocoded_result.features[index].centroid.coordinates[0], last_geocoded_result.features[index].centroid.coordinates[1]);
+    map.setView(markerLatLng, 15);
+    if (marker) {map.removeLayer(marker);}
+    jQuery('#location_lat').val(last_geocoded_result.features[index].centroid.coordinates[0]);
+    jQuery('#location_lng').val(last_geocoded_result.features[index].centroid.coordinates[1]);
+    //marker = new L.Marker(markerLatLng, {title: 'LOI location'});
+    //map.addLayer(marker);
+    add_marker_to_map(markerLatLng);
+  }
+
+  function clear_selected_items() {
+    jQuery('ul.ui-menu li.ui-menu-item a').map(function(){
+      jQuery(this).removeClass('selected');
+    });
+  }
+
+  function zoom_to_selected_city() {
+    jQuery('#geocoded_street').removeAttr('disabled');
+    jQuery('#geocoded_building').removeAttr('disabled');
+    geocode_request({show_list_with_results: false});
+  }
+
+  function zoom_to_selected_country_enable_city_disable_address() {
+    var current_country = $('#location_country').val();
+    var full_country_name = reverse_options_for_country[current_country];
+    jQuery.getJSON("http://geocoding.cloudmade.com/#{CLOUDMADE_API_KEY}/geocoding/v2/find.js?query=country:"+encodeURIComponent(full_country_name)+"&return_location=true&callback=?", function(result){
+      if(result.features.length > 0) {
+        markerLatLng = new L.LatLng(result.features[0].centroid.coordinates[0], result.features[0].centroid.coordinates[1]);
+        jQuery('#location_lat').val(result.features[0].centroid.coordinates[0]);
+        jQuery('#location_lng').val(result.features[0].centroid.coordinates[1]);
+        map.setView(markerLatLng, 5);
+        if (marker) {map.removeLayer(marker);}
+        add_marker_to_map(markerLatLng);
+      }
+    });
+    jQuery('#location_city').removeAttr('disabled');
+    jQuery('#geocoded_street').attr('disabled', '');
+    jQuery('#geocoded_building').attr('disabled', '')
+  }
+
+  function update_address_field_with_address(street) {
+    jQuery('#geocoded_street').val(decodeURIComponent(street));
+  }
+
+  function geocode_request(options) {
+    jQuery(".geocoded_items ul").html('');
+
+    var current_country = $('#location_country').val();
+    var full_country_name = reverse_options_for_country[current_country];
+
+    var current_city     = $('#location_city').val();
+    var current_street   = $('#geocoded_street').val();
+    var current_building = $('#geocoded_building').val();
+
+    if(current_street == '' && pin_dropped_manually) return; // make sure that after we dropped pin on map and *deleted* street address we don't move to center of the city (standard action with empty street)
+
+    // http://jira.kyiv.cogniance.com/browse/DF-332 Locations: Suggestion is displayed incorrectly for street field
+    // as a temporary workaround I deleted ";house:"+encodeURIComponent(current_building)+ from ajax request
+
+    jQuery.getJSON("http://geocoding.cloudmade.com/#{CLOUDMADE_API_KEY}/geocoding/v2/find.js?query=country:"+encodeURIComponent(full_country_name)+";city:"+encodeURIComponent(current_city)+";street:"+encodeURIComponent(current_street)+"&return_location=true&callback=?", function(result){
+      last_geocoded_result = result;
+      if(result.features.length > 0) {
+        markerLatLng = new L.LatLng(result.features[0].centroid.coordinates[0], result.features[0].centroid.coordinates[1]);
+        jQuery('#location_lat').val(result.features[0].centroid.coordinates[0]);
+        jQuery('#location_lng').val(result.features[0].centroid.coordinates[1]);
+        map.setView(markerLatLng, 15);
+        if (marker) {map.removeLayer(marker);}
+        //marker = new L.Marker(markerLatLng, {title: 'LOI location'});
+        //map.addLayer(marker);
+        add_marker_to_map(markerLatLng)
+
+        if(options['show_list_with_results']) {
+          var lis_for_geocoded_items = '';
+          jQuery(result.features).map(function(i){
+            if(this.properties && (this.properties['osm_element'] == 'way' || this.properties['highway'])) {
+              var address = '';
+              if(this.properties['name'] || this.properties['name:en']) {
+                address = (this.properties['name:en'] ? this.properties['name:en'] : this.properties['name']);
+              } else if(this.properties['addr:street']) {
+                address = this.properties['addr:street'];
+              }
+              var str = address + ', ' + (this.location.city ? (this.location.city + ', ') : '') + this.location.country;
+              var selected_class = "class=''";
+              if(i == 0) selected_class="class='selected'";
+              lis_for_geocoded_items += "<li class='ui-menu-item' style='cursor:pointer'><a "+selected_class+" href='javascript:void(0)' onclick=\"update_address_field_with_address('"+encodeURIComponent(address)+"'); clear_selected_items(); jQuery(this).addClass('selected'); change_geocoded_item("+i+");\">"+str+"</a></li>";
+            }
+          });
+          if(lis_for_geocoded_items != "") {
+            lis_for_geocoded_items += '<li>#{button_to_function 'X', "jQuery(\".geocoded_items\").hide();", :style => 'width: 30px; height: 20px; font-size: 10px; font-weight: bold; color: red; float: right;'}</li>';
+            jQuery(".geocoded_items ul").html(lis_for_geocoded_items);
+            jQuery(".geocoded_items").show();
+          } else {
+            alert('Could not find street ' + current_street + ' in the city ' + current_city + ' in the country ' + full_country_name);
+          }
+        }
+      }    
+    });
+  }
+
+  function reverse_geocode_request(lat, lng) {
+    jQuery.getJSON('http://geocoding.cloudmade.com/#{CLOUDMADE_API_KEY}/geocoding/v2/find.js?object_type=road&around='+lat+','+lng+'&distance=closest&return_location=true&callback=?', function(result){
+      if(result.features) {
+        var address = '';
+        var props = result.features[0].properties;
+        var location = result.features[0].location;
+        if(props['name'] || props['name:en']) {
+          address = (props['name:en'] ? props['name:en'] : props['name']);
+        } else if(props["addr:street"]) {
+          address = props['addr:street'];
+        }
+        // handle "Lesi Ukrainski Blvd;Lesi Ukrainky Boulevard"
+        if(address.indexOf(';') > 0) {
+          address = address.split(';')[0];
+        }
+        jQuery('#geocoded_street').removeAttr('disabled').val(address);
+        jQuery('#geocoded_building').removeAttr('disabled').val(props["addr:housenumber"]);
+
+        if(address == '') {
+          alert('Could not find name of this street for the city ' + current_city + ' in the country ' + full_country_name);
+        }
+      }
+    });
+  }
+
+  function markToAdd(btn){
+    btn = Ext.get(btn);
+    currentLoi = btn.findParent("li", 10, true);
+    currentLoi.addClass("added");
+
+    return false;
+  }
+
+  function markToDelete(btn){
+    btn = Ext.get(btn);
+    currentLoi = btn.findParent("li", 10, true);
+    currentLoi.removeClass("added");
+
+    return false;
+  }
+
+  function deleteMedia(id) {
+    Ext.get("media_row_" + id).remove();
+
+    var list = document.getElementById("media-list-table");
+    var items = Ext.DomQuery.select("#media-list .media-row");
+    if (items.length == 0){
+      var item = list.appendChild(document.createElement("a"));
+      item.className = "media-row remark empty-row";
+      item.innerHTML = "No Media attached."
+    }
+    return false;
+  }
+
+  function saveFormItem() {
+    $("#location_is_draft").val(0);
+    window.formSubmit = true
+    document.getElementById('new_location').submit();
+  }
+
+  // jQuery UI Autocomplete additional functions
+  function split( val ) {
+    return val.split( /,\s*/ );
+  }
+
+  function extractLast( term ) {
+    return split( term ).pop();
+  }
+
+  var cloudmadeUrl = 'http://107.20.174.7:81/osm_tiles2/{z}/{x}/{y}.png',
+      cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18});
+
+  var map = new L.Map('map-block');
+  map.addLayer(cloudmade);
+
+  marker = null;
+  var markerLatLng = null;
+  var lat = document.getElementById('location_lat').value;
+  var lng = document.getElementById('location_lng').value;
+  if (lat && lng) {
+    markerLatLng = new L.LatLng(lat, lng);
+    map.setView(markerLatLng, 15);
+    add_marker_to_map(markerLatLng);
+  } else {
+    map.setView(new L.LatLng(51.50757, -0.1078), 15);
+  }
+
+  map.on('click', function(e) {
+    markerLatLng = e.latlng;
+
+    pin_dropped_manually = true;
+
+    var current_country = $('#location_country').val();
+    var full_country_name = reverse_options_for_country[current_country];
+    var current_city     = $('#location_city').val();
+
+    jQuery('#location_lat').val(e.latlng.lat);
+    jQuery('#location_lng').val(e.latlng.lng);
+
+    markerLatLng = new L.LatLng(e.latlng.lat, e.latlng.lng);
+    map.setView(markerLatLng, map.getZoom());
+    if (marker !== null) {
+      marker.setLatLng(markerLatLng);
+    } else {
+      add_marker_to_map(markerLatLng);
+    }
+    reverse_geocode_request(e.latlng.lat, e.latlng.lng);
+  });
+
+  function media_in_selected_place() {
+    var in_country = jQuery('#location_country').val();
+    var in_city = jQuery('#location_city').val();
+    var in_place = '';
+    if(in_country != '') { 
+      in_place += '&in_country='+in_country 
+    }
+    if(in_city != '') { 
+      in_place += '&in_city='+encodeURIComponent(in_city) 
+    }
+    return in_place;
+  }
+
+  tabs = tabsWin = null;
+  function addExistingMedia() {
+    if (!tabs && !tabsWin) {
+      tabs = new Ext.TabPanel({
+        region: 'center',
+        margins:'0 0 0 0',
+        padding: '0 0 33px 0',
+        activeTab: 0,
+        tabWidth: 94,
+        deferredRender: false,
+        defaults:{autoScroll:true},
+        bodyCfg: {
+          tag: 'div',
+          cls: 'search-container',
+          html: '<div class="search-bar" style="height:auto;float:left;width:100%;background-color:#ced9e7;"><div  style="height:18px;float:left;"><div class="search_spinner" style="display:none"><img src="/images/spinner.gif" alt="Please wait"/> Searching</div><div class="locations_status_bar"></div></div><div style="clear:both"></div><div class="left"><input type="text" name="media_search" id="media_search"/></div><div id="search-button-container" class="left search-button-container"></div></div>'
+        },
+        listeners: {
+          render: function() {
+            searchButton = new Ext.Button({renderTo:'search-button-container',
+              text: 'Search',
+              width: 65,
+              handler: function(){
+                jQuery('.locations_status_bar').html('');
+                jQuery('.search_spinner').show();
+                Ext.Ajax.request({
+                  url : '/media/search/'+encodeURIComponent(jQuery('#media_search').val())+'?'+media_in_selected_place(),
+                  params: {format: 'json'},
+                  method: 'GET',
+                  success: function ( result, request ) {
+                    $('.search_spinner').hide();
+                    var res = Ext.util.JSON.decode(result.responseText), res_ids = [];
+                    for(var i = 0; i < res.length; i++) { res_ids.push(res[i][0]) };
+                    var allMedia = Ext.DomQuery.select('.existing-medium-list li');
+                    var selected_mediums = Ext.DomQuery.select("input.selected_medium");
+                    var selected_mediums_ids = []
+                    for( var i = 0; i < selected_mediums.length; i++) {
+                      if(selected_mediums[i].style.display != 'none') {
+                        selected_mediums_ids.push(parseInt(selected_mediums[i].value));
+                      }
+                    }
+                    for (var i = 0; i < allMedia.length; i++){
+                      var curMedia = Ext.get(allMedia[i]);
+                      var curMediaId = parseInt(curMedia.child("input[name=medium-id]").dom.value);
+                      if (res_ids.indexOf(curMediaId) == -1 || selected_mediums_ids.indexOf(curMediaId) != -1) {
+                        curMedia.addClass("x-hidden");
+                      } else {
+                        curMedia.removeClass("x-hidden");
+                      }
+                    }
+                    // if there will be blank screen (all media hidden)
+                    if(jQuery('.existing-medium-list li').length == 0 || jQuery('.existing-medium-list li').length == jQuery('.existing-medium-list li.x-hidden').length) {
+                      jQuery('.locations_status_bar').html('<p>This query returned no media for ' + jQuery('#location_city').val() + ', ' + jQuery('#location_country').val() + '</p>');
+                    } else {
+                      jQuery('.locations_status_bar').html('');
+                    }
+                  },
+                  failure: function ( result, request) { 
+                    Ext.MessageBox.alert('Failed ', result.responseText); 
+                  } 
+                });
+              }
+            });
+          }
+        },
+        items:[
+        {
+          iconCls: 'all-tab',
+          title: 'All',
+          listeners: {
+            render: function() {
+              this.load({
+                url: '/media.js?all_media=true'+media_in_selected_place(),
+                text: 'Loading content...',
+                callback: checkSelectedMediums
+              });
+            }
+          }
+        }, {
+          iconCls: 'picture-tab',
+          title: 'Pictures',
+          listeners: {
+            render: function() {
+              this.load({
+                url: '/media.js?pictures=true'+media_in_selected_place(),
+                text: 'Loading content...',
+                callback: checkSelectedMediums
+              });
+            }
+          }
+        },{
+          iconCls: 'video-tab',
+          title: 'Video',
+          forceLayout: true,
+          listeners: {
+            render: function() {
+              this.load({
+                url: '/media.js?videos=true'+media_in_selected_place(),
+                text: 'Loading content...',
+                callback: checkSelectedMediums
+              });
+            }
+          }
+        },{
+          iconCls: 'audio-tab',
+          title: 'Audio',
+          listeners: {
+            render: function() {
+              this.load({
+                url: '/media.js?audios=true'+media_in_selected_place(),
+                text: 'Loading content...',
+                callback: checkSelectedMediums
+              });
+            }
+          }
+        },{
+          iconCls: 'text-tab',
+          title: 'Text',
+          listeners: {
+            render: function() {
+              this.load({
+                url: '/media.js?text_pages=true'+media_in_selected_place(),
+                text: 'Loading content...',
+                callback: checkSelectedMediums
+              });
+            }
+          }
+        }]
+      });
+
+      tabsWin = new Ext.Window({
+        title: 'Add Existing Media for '+jQuery('#location_city').val()+', '+jQuery('#location_country').val(),
+        closable:true,
+        width:377,
+        height: 500,
+        plain:true,
+        layout: 'border',        
+        modal: true,
+        items: tabs,
+        closeAction: 'close',        
+        fbar: [{
+          text: 'Cancel',
+          handler: function(){closeAddExistingMediaWindow();}
+        },{
+          text: 'Ok',
+          handler: function(){addMediaToList();}
+        }]
+      });
+    }
+
+    tabsWin.on('beforeclose', function(){tabs = tabsWin = null;}, this);
+    tabsWin.show(this);
+  }
+
+  function checkSelectedMediums() {
+    var selectedMediums = Ext.DomQuery.select("input.selected_medium");
+    var allMedia = Ext.DomQuery.select('.existing-medium-list li');
+    for (var i=0; i < allMedia.length; i++){
+      for (var k=0; k < selectedMediums.length; k++){
+        curMedia = Ext.get(allMedia[i]);
+        if (curMedia.child("input[name=medium-id]").dom.value == selectedMediums[k].value) {
+          curMedia.addClass("x-hidden");                              
+        }
+      }
+    }
+    if(jQuery('.existing-medium-list li').length == 0) {
+      jQuery('.locations_status_bar').html('<p>Found no media for ' + jQuery('#location_city').val() + ', ' + jQuery('#location_country').val() + '</p>');
+    } else if(jQuery('.existing-medium-list li').length == jQuery('.existing-medium-list li.x-hidden').length) {
+      jQuery('.locations_status_bar').html('<p>All media are already added for ' + jQuery('#location_city').val() + ', ' + jQuery('#location_country').val() + '</p>');
+    } else {
+      jQuery('.locations_status_bar').html('');
+    }
+    jQuery('img.lazy').lazyload({container: jQuery('.existing-medium-list').parent()});
+  }
+
+  function closeAddExistingMediaWindow() {
+    tabsWin.close(this);
+    tabs = tabsWin = null;
+  }
+
+  function showAddMetaInfoWin() {
+    var media_template = "";
+    var html_for_countries_options = "#{options_for_select(options_for_country).gsub('"', '\"').gsub("\n", "")}";
+    for(var i = 0; i < uploaded_files; i++) {
+      media_template +=
+        "<div style=\"clear:both; padding-top: 30px;\" id=\"uploaded_" + (i) + "\">"+
+          '<div class="media_placeholder">' +
+            '<img class="remove_upload" style="display: none;" src="/javascripts/extjs/awesome_uploader/cross.png" onclick="return removeUploadEntry(this);" />' +
+            "<img class=\"uploaded\" style=\"width:100px;float:left\"/>"+
+            "<input type=\"hidden\" name=\"medium[][position]\" value=\"" + (i) + "\">"+
+          '</div>' +
+          "<div class=\"uploaded_file\">"+
+            "<input class=\"uploaded_path\" type=\"hidden\" name=\"medium[][filepath]\"/>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"name\" class=\"required\">Name</label>"+
+              "<input type=\"text\" required=\"true\" name=\"medium[][name]\" class=\"edit_medium_name\"/>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][tag_list]\">Tag list</label>"+
+              "<input type=\"text\" name=\"medium[][tag_list]\" id=\"media_keywords\" size=\"20\"/>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][country]\" class=\"required\">Country</label>"+
+              "<select required=\"true\" name=\"medium[][country]\" class=\"medium_country\" onchange=\"jQuery(this).parent().parent().find('.medium_city').removeAttr('disabled')\" style=\"width:290px\"></select>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][city]\">City</label>"+
+              "<input type=\"text\" name=\"medium[][city]\" class=\"medium_city\" size=\"20\" disabled=\"disabled\"/>"+
+            "</div>"+
+            "<div class=\"popup-form-row\">"+
+              "<label for=\"medium[][credits]\">Credits</label>"+
+              "<textarea name=\"medium[][credits]\" id=\"edit_medium_credits\" rows=\"2\" cols=\"30\"></textarea>"+
+              '<br  />' +
+            "</div>"+
+          "</div>"+
+          '<div style="clear:both;"></div>' +
+        "</div>" +
+        '<div style="clear:both;"></div>';
+    }
+
+    jQuery('.more_media_preview').html(media_template);
+    jQuery('.medium_country').html(html_for_countries_options);
+
+    // selected country/city for this location
+    var selected_country = jQuery('#location_country').val();
+    var selected_city = jQuery('#location_city').val();
+    
+    if (selected_country != "" && selected_city != "") {
+      jQuery('.medium_country').val(selected_country);
+      jQuery('.medium_city').removeAttr('disabled').val(selected_city);
+    }
+
+    jQuery('.remove_upload').show();
+
+    editMediaWindow.setTitle("Upload New Media");
+    document.getElementById('edit_media_form').action = "/media";
+    document.getElementById('edit_media_form_method').value = "post";
+    jQuery('#edit-media-win .uploaded').map(function(i){
+      jQuery(this).attr(
+        'src',
+        uploaded[i].type == 'picture' ? ('/'+uploaded[i].path) : '/images/icons/' + uploaded[i].type + '.png'
+      );
+    });
+    jQuery('#edit-media-win .uploaded_file .edit_medium_name').map(function(i) {
+      var medium_filename = uploaded[i].path.split('/').pop();
+      var medium_name = medium_filename;
+      var last_dot_occurence = medium_filename.lastIndexOf('.');
+      if(last_dot_occurence != -1) {
+        medium_name = medium_filename.substr(0, last_dot_occurence);
+      }
+      jQuery(this).val(medium_name);
+    });
+    jQuery('#edit-media-win .uploaded_path').map(function(i){
+      jQuery(this).val(uploaded[i].path);
+    });
+    set_autocomplete_on_tags_input(); // defined in application.js
+    editMediaWindow.show();
+  }
+  
+  function removeUploadEntry(element) {
+    el = jQuery(element).parent().parent();
+    id = parseInt(el.attr('id').replace('uploaded_', ''));
+    uploaded.splice(id, 1);
+    el.remove();
+    return false;
+  }
+
+  function addMediaToList() {
+    var list = document.getElementById("media-list-table");
+    
+    var empty = Ext.DomQuery.select("#media-list .media-row.empty-row");
+    Ext.get(empty).remove();
+
+    var selectedMedia = Ext.DomQuery.select('.existing-medium-list li.added');
+    for (var i=0; i<selectedMedia.length; i++){
+      var medium = Ext.get(selectedMedia[i]);
+      var item = list.appendChild(document.createElement("a"));
+      var mediumId = medium.child("input[name=medium-id]").dom.value;
+      var mediumName = medium.child(".medium-name-field").dom.innerHTML;
+
+      item.innerHTML = '<div class="media-actions">\
+        <div class="left media-size">' + medium.getAttribute("attachment_file_size") + '</div>\
+        <div onclick="return deleteMedia(' + mediumId + ');" href="#" class="delete-link left">\
+        <div class="left"></div>\
+        </div></div>\
+        <div class="media-name media-type-' + medium.getAttribute("medium_type") + '">\
+        <input type="hidden" value="' + mediumId + '" name="location[medium_ids][]" class="selected_medium">\
+        <span>' + mediumName + '</span>\
+        </div>\
+        <div class="clear"></div>';
+        item.className = "media-row";
+        item.id = "media_row_" + mediumId;
+    }
+    if (Ext.DomQuery.select("#media-list .media-row").length == 0){
+      var item = list.appendChild(document.createElement("a"));
+      item.className = "media-row remark empty-row";
+      item.innerHTML = "No Media attached."
+    }
+
+    closeAddExistingMediaWindow();
+  }
+
+  Ext.onReady(function() {
+    jQuery(".chzn-select").chosen();
+      jQuery( "#media_search" )
+      // don't navigate away from the field on tab when selecting an item
+      .bind( "keydown", function( event ) {
+        //console.log('keydown on media');
+        if ( event.keyCode === jQuery.ui.keyCode.TAB && jQuery( this ).data( "autocomplete" ).menu.active ) {
+          event.preventDefault();
+        }
+      })
+      .autocomplete({
+        html: true,
+        source: function( request, response ) {
+          jQuery.getJSON( "/media/tagged_with", {
+            term: extractLast( request.term )
+          }, response );
+        },
+        search: function() {
+          // custom minLength
+          var term = extractLast( this.value );
+          if ( term.length < 2 ) {
+            return false;
+          }
+        },
+        focus: function() {
+          // prevent value inserted on focus
+          return false;
+        },
+        select: function( event, ui ) {
+          var terms = split( this.value );
+          // remove the current input
+          terms.pop();
+          // add the selected item
+          terms.push( ui.item.value );
+          // add placeholder to get the comma-and-space at the end
+          terms.push( "" );
+          this.value = terms.join( ", " );
+          return false;
+        }
+      });
+
+      jQuery("#location_category_list").bind( "keydown", function( event ) {
+        if ( event.keyCode === jQuery.ui.keyCode.TAB && jQuery( this ).data( "autocomplete" ).menu.active ) {
+          event.preventDefault();
+        }
+      })
+      .autocomplete({
+        html: true,
+        appendTo: "#details-block",
+        source: function( request, response ) {
+          jQuery.getJSON( "/find_categories_by_name", {
+            term: extractLast( request.term )
+          }, response );
+        },
+        search: function() {
+          // custom minLength
+          var term = extractLast( this.value );
+          if ( term.length < 2 ) {
+            return false;
+          }
+        },
+        open: function() {
+          jQuery('.ui-autocomplete').css({zIndex: 10});
+        },
+        focus: function() {
+          // prevent value inserted on focus
+          return false;
+        },
+        select: function( event, ui ) {
+          var terms = split( this.value );
+          // remove the current input
+          terms.pop();
+          // add the selected item
+          terms.push( ui.item.value );
+          // add placeholder to get the comma-and-space at the end
+          terms.push( "" );
+          this.value = terms.join( ", " );
+          return false;
+        }
+      });
+
+    buttonObject2 = new Ext.Button({renderTo:'upload-new-media-button',
+      text: 'Upload New Media',
+      width: 145,
+      handler: function(){
+        var current_country = jQuery('#location_country').val();
+        var current_city = jQuery('#location_city').val();
+        if(current_country == "" || current_city == "") {
+          alert('Select Country and City first!');
+        } else {
+          AwesomeUploaderInstance3.show();
+        }
+      }
+    });
+
+    buttonObject = new Ext.Button({renderTo:'add-existing-media-button',
+      text: 'Add Existing Media',
+      width: 145,
+      handler: function(){
+        var current_country = jQuery('#location_country').val();
+        var current_city = jQuery('#location_city').val();
+        if(current_country == "" || current_city == "") {
+          alert('Select Country and City first!');
+        } else {
+          addExistingMedia();
+        }
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'overview-container',
+      title: 'Overview',
+      contentEl: 'overview-block',
+      collapsible: true,
+      headerCfg: {
+        cls: 'block-header'
+      },
+      layoutConfig: {
+        align : 'stretch'
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'map-container',
+      title: 'Map',
+      contentEl: 'map-block',
+      collapsible: true,
+      headerCfg: {
+        cls: 'block-header'
+      },
+      layoutConfig: {
+        align : 'stretch'
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'details-container',
+      title: 'Details',
+      contentEl: 'details-block',
+      collapsible: true,
+      headerCfg: {
+        cls: 'block-header'
+      },
+      layoutConfig: {
+        align : 'stretch'
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'media-container',
+      title: 'Media',
+      contentEl: 'media-block',
+      collapsible: true,
+      headerCfg: {
+        cls: 'block-header'
+      },
+      layoutConfig: {
+        align : 'stretch'
+      }
+    });
+
+    editMediaWindow = new Ext.Window({
+      title: 'Edit Media',
+      closable:true,
+      resizeable: false,
+      width: 600,
+      height: 500,
+      layout: 'fit',
+      plain: true,
+      bodyStyle:'padding:5px;',
+      autoScroll: true,
+      contentEl: 'edit-media-win',
+      hidden: true,
+      modal: true,
+      closeAction: 'hide',
+      bodyCfg: {
+        cls: 'window-background'
+      },
+      fbar: [{
+        text: 'Cancel',
+        handler: function(){closeEditMediaWindow();}
+      },{
+        text: 'Ok',
+        handler: function(){
+          // small dirty hack
+          $('#edit_media_form_method').after('<input type="hidden" name="loi" value="true" />')
+          startUpdate();
+        }
+      }]
+    });
+  });
+
+  function getFBar() {
+    return [
+    {
+      text: 'Cancel',
+      handler: function(){
+        location.href = "/locations/#{@location.id.to_s}";
+      }
+    },
+    '->',
+    {
+      text: 'Save',
+      handler: function(){saveFormItem();}
+    }]
+  }

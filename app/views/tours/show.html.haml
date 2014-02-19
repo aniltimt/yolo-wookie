@@ -1,0 +1,109 @@
+- content_for :list_title, 'Tours'
+- content_for :details_title, 'Tour info'
+- content_for :categories_menu do
+  = render :partial => "menu/tours"
+- content_for :loi_list do
+  = render :partial => "tours/index"
+
+- content_for :loi_info do
+  #overview-container
+    #overview-block
+      .form-row
+        %span.label Tour name
+        %span.bold= @tour.name
+      .form-row
+        %span.label Country
+        %span.bold= country_from_iso_code(@tour.country)
+      .form-row
+        %span.label City
+        %span.bold= @tour.city
+      .form-row
+        %span.label Overview
+        %span= @tour.overview
+      .form-row
+        %span.label Info
+        %span= @tour.info
+      - if @tour.length_in_km
+        .form-row
+          %span.label Distance
+          %span= distance_in_kilometers(@tour.length_in_km)
+      - if @tour.length_in_minutes
+        .form-row
+          %span.label Travel time
+          %span= distance_in_time(@tour.length_in_minutes)
+      - if @tour.pob_categories_ids
+        .form-row
+          %span.label POB Categories
+          %span= @selected_pob_categories
+      .form-row
+        %span.label Images
+        %ul.image-list
+          - thumbs = @tour.locations.select(&:thumbnail?).map(&:thumbnail).first(4)
+          - for thumb in thumbs do
+            %li= image_tag thumb.url
+      %div{"style" => "clear:both"}
+      .form-row
+        %span.label Locations
+      %div{"style" => "clear:both"}
+      %ol.locations-list
+        - for loi in @tour.tour_locations do
+          %li
+            .location-name= loi.location.name
+            .location-comment= loi.location.comment
+      .form-row
+        %span.label All LOI on the map
+      #map-block.form-row{:style => "margin-left:60px"}
+  %form.x-hidden{:method => 'post', :id => 'tour_delete_form'}
+    %input{:type => 'hidden', :name => '_method', :value => 'delete'}
+    %input{:type => 'hidden', :name => 'authenticity_token', :value => form_authenticity_token}
+
+  %form.x-hidden{:method => 'post', :id => 'tour_schedule_form', :action => schedule_build_tour_path}
+    %input{:type => 'hidden', :name => '_method', :value => 'schedule_build'}
+    %input{:type => 'hidden', :name => 'authenticity_token', :value => form_authenticity_token}
+
+  :javascript
+    function getFBar() {
+      var schedule_btn = '#{ formatted_build_message(@tour) }';
+      var able_to_build = #{ !@tour.building? };
+      var area_too_big = #{ @tour.area_too_big? };
+      var last_build_failed = #{ @tour.failed? };
+      var last_build_failed_msg = last_build_failed ? '#{ escape_javascript(@tour.build_message) }' : '';
+      var delete_button = '';
+        
+      if (#{ @tour.deletable? }) {
+        delete_button = {
+          text: 'Delete Tour',
+          handler: function(){
+            if (confirm ('Are you sure you want to delete this tour?')) {
+              var form = document.getElementById('tour_delete_form');
+              form.submit();
+            }
+            return false;
+          }
+        }
+      }
+        
+      if (area_too_big) {
+        schedule_btn = 'Tour area is too big, please change locations';
+      } else if (able_to_build) {
+        schedule_btn = {
+          text: 'Schedule build',
+          handler: function(){
+            var form = document.getElementById('tour_schedule_form');
+            form.submit();
+          }
+        }
+      } else if(last_build_failed) { 
+        schedule_btn = '' 
+      }
+      return [ schedule_btn, last_build_failed_msg,
+        '->',
+        delete_button,
+        {
+          text: 'Edit Tour',
+          handler: function(){
+            location.href =  "#{ edit_resource_path }";
+          }
+      }]
+    }
+  = render :partial => "tours/tour_show_javascript.html.erb", :locals => {:map_container_id => 'map-block'}

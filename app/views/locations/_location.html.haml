@@ -1,0 +1,14 @@
+- cache(:action => 'index', :controller => 'locations', :key => "lfragm_#{location.id}") do
+  %li{:id => "location_li_#{location.id}"}
+    %a{:href => location_path(location, current_scopes)}
+      .loi-thumb
+        - if location.thumbnail?
+          = image_tag location.thumbnail.original.url
+      .loi-name
+        = location.name
+        %br
+        %span.loi-comment= location.comment
+      - if location.is_draft?
+        .loi-is-draft
+          Draft
+      .clear

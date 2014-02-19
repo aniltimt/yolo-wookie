@@ -1,0 +1,9 @@
+.toggle_server_button{:style => "padding:5px;background-color:#{@ec2_color}"}
+  - if @ec2_state == 'stopped'
+    %a{:href => '/aws/start_routing_server'} Start routing server
+  - elsif @ec2_state == 'stopping'
+    %p Stopping routing server
+  - elsif @ec2_state == 'pending'
+    %p Starting routing server
+  - else
+    %a{:href => '/aws/stop_routing_server'} Stop routing server

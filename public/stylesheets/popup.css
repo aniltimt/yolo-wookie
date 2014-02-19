@@ -1,0 +1,38 @@
+body {
+	background-color: #fff;
+}
+
+.block-header {
+	padding: 5px 3px 4px 5px;
+	background-color: #e6e6e6;
+	border-color: #808080;
+	color: #808080;
+	font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+	padding-left: 10px;	
+}
+
+.popup-form-row {
+	height: 30px;}
+	.popup-form-row label {
+		width: 70px;
+		color: #000;
+		font: normal 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+		text-align: right;
+		display: block;
+		float: left;
+		padding: 2px 6px;}
+	.popup-form-row input {
+		color: #000;
+		font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+		width: 200px;}
+
+.errors {
+	color: #FF0000;
+	font: normal 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+	margin: 5px 5px 15px 5px;
+	line-height: 1.5;	
+}
+
+.window-background {
+	background: #eee;
+}

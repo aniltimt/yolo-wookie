@@ -1,0 +1,34 @@
+<script type="text/javascript">
+  var cloudmadeUrl = 'http://107.20.174.7:81/osm_tiles2/{z}/{x}/{y}.png',
+        cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18});
+
+  var map = new L.Map('<%= map_container_id %>');
+  map.addLayer(cloudmade);
+
+  var coords = [];
+  var latlng_bounds = [];
+
+  <% @tour.locations.each do |location| %>
+  coords.push([<%= location.lat %>, <%= location.lng %>]);
+  <% end %>
+  
+  for(var i = 0; i < coords.length; i++) {
+    var point = new L.LatLng(coords[i][0], coords[i][1]);
+    latlng_bounds.push(point);
+
+    var MyIcon = L.Icon.extend({
+      iconUrl: "/images/icons/pins/pin"+(i+1)+".png",
+      shadowUrl: '/javascripts/leaflet/images/marker-shadow.png',
+      iconSize: new L.Point(24, 40),
+      iconAnchor: new L.Point(12, 40)
+    });
+    var icon = new MyIcon();
+
+    var marker = new L.Marker(point, {title: 'LOI location', icon: icon});
+    map.addLayer(marker);
+  }
+
+  var cm_latlng_bounds = new L.LatLngBounds(latlng_bounds);
+  var min_zoom_level_for_bounds = map.getBoundsZoom(cm_latlng_bounds);
+  map.setView(cm_latlng_bounds.getCenter(), min_zoom_level_for_bounds);
+</script>

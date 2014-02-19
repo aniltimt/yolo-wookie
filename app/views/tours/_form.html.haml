@@ -1,0 +1,370 @@
+#overview-container
+  #overview-block
+    %span{:style => 'color: red;'}
+      Fields marked with * are required
+    %p= f.error_messages
+    .form-row
+      = f.label :name, 'Tour name', :class => 'required'
+      = f.text_field :name, :maxlength => 24
+    .form-row
+      = f.label :country, nil, :class => 'required'
+      = f.select :country, options_for_select(options_for_country, f.object.country), {}, {:class => "chzn-select", :style => "width:355px;", :onchange => "check_city_bbox('tour')"}
+    .form-row
+      = f.label :city, nil, :class => 'required'
+      = f.text_field :city, :onchange => "check_city_bbox('tour')"
+      #tour_city_message{:style => "display:none;border:1px solid red;padding:5px;width:270px;margin-top:-10px;float:left;"}
+    .form-textarea-row.form-row
+      = f.label :overview, nil, :class => 'required'
+      = f.text_area :overview
+    .form-short-textarea-row.form-row
+      = f.label :info, nil, :class => 'required'
+      = f.text_area :info
+    .form-short-textarea-row.form-row
+      = f.label :length_in_km, "Distance [km]", :class => 'required'
+      = f.text_field :length_in_km
+    .form-short-textarea-row.form-row
+      = f.label :length_in_minutes, "Travel time [minutes]", :class => 'required'
+      = f.text_field :length_in_minutes
+    .form-row
+      %span.label.required Locations
+      .locations-buttons
+        #add-existing-loi-button.button-container
+        = "Should you want to add new LOIs, go to LOI tab to create new LOIs"
+        .clear
+    %div{:style => "clear:both;"}
+    .form-row
+      %span.label POB Categories
+    %div{:style => "width:400px;float:left;margin-left:15px;margin-top:21px;"}
+      - pob_categories_ids = @tour.pob_categories_ids.to_s.split(',').map{|p| p.to_i}
+      - @pob_categories[:tree].each do |top_category_id, subcategories_list|
+        %label.checkbox
+          %input.check_boxes.required{:onclick => "toggle_subcategories(#{top_category_id});", :id => "pob_category_#{top_category_id}", :name => "tour[pob_categories_ids][]", :type => "checkbox", :value =>  top_category_id, :checked => pob_categories_ids.include?(top_category_id)}
+          = @pob_categories[:list][top_category_id]
+          %br
+        - subcategories_list.each do |subcategory_id|
+          %label.checkbox{:style => "margin-left:20px"}
+            %input.check_boxes.required{:onclick => "disable_top_category_if_subcats_unchecked(#{top_category_id});", :class => "#{top_category_id}_subcategories", :name => "tour[pob_categories_ids][]", :type => "checkbox", :value => subcategory_id, :checked => pob_categories_ids.include?(subcategory_id)}
+            = @pob_categories[:list][subcategory_id]
+          %br
+    %div{:style => "clear:both;"}
+    %ul#sortable
+      - @tour_locations.each_with_index do |loi, index|
+        %li.ui-state-default{:id => "loi_id_#{loi[:location_id]}", :loi_info => "location_#{loi[:id]}_#{loi[:location_id]}"}
+          %span.ui-icon.ui-icon-arrowthick-2-n-s{:style => "float:left"}
+          .loi_details
+            #{loi[:location_name]}  [#{loi[:location_comment]}]
+          .delete_btn{:onclick => "deleteLOI(#{loi[:location_id]})"}
+    %input#locations_order_serialized{:type => "hidden"}
+    %input#deleted_items_list{:type => "hidden", :name => "deleted_items"}
+    .form-row
+      %span.label 
+        Preview
+      #lowres_map_container{:style => "width:577px;height:400px;float:left"}
+
+:javascript
+  jQuery( "#sortable" ).sortable({
+    axis: 'y',
+    update: function() {
+      jQuery('#locations_order_serialized').val(jQuery( "#sortable" ).sortable( "serialize", {attribute: "loi_info", expression: /(location)_(\d*_\d*)/} ));
+      added_loi_list = [];
+      jQuery('.ui-sortable li').map(function(){
+        var id = jQuery(this).attr('loi_info').match(/location_\d*_(\d*)/)[1];
+        added_loi_list.push(parseInt(id));
+      });
+      show_lois_on_the_maps();
+    }
+  });
+  jQuery('#locations_order_serialized').val(jQuery( "#sortable" ).sortable( "serialize", {attribute: "loi_info", expression: /(location)_(\d*_\d*)/} ));
+  jQuery( "#sortable" ).disableSelection();
+
+  function markToAdd(btn){
+    btn = Ext.get(btn);
+    currentLoi = btn.findParent("li", 10, true);
+    currentLoi.addClass("added");
+
+    return false;
+  }
+
+  function markToDelete(btn){
+    btn = Ext.get(btn);
+    currentLoi = btn.findParent("li", 10, true);
+    currentLoi.removeClass("added");
+
+    return false;
+  }
+    
+  function saveFormItem() {
+    if(added_loi_list.length < 1) {
+      alert('Please select at least 1 location associated with this tour!')
+    } else {
+      document.getElementById('new_tour').action += '?'+jQuery('#locations_order_serialized').val();
+      document.getElementById('new_tour').submit();
+    }
+  }
+
+  var map;
+
+  Ext.onReady(function() {
+    jQuery(".chzn-select").chosen();
+
+    buttonObject = new Ext.Button({renderTo:'add-existing-loi-button',
+      text: 'Add Existing LOI',
+      width: 145,
+      handler: function(){
+        var current_country = jQuery('#tour_country').val();
+        var current_city = jQuery('#tour_city').val();
+        if(current_country == "" || current_city == "") {
+          alert('Select Country and City first!');
+        } else {
+          addExistingLOI();
+        }
+      }
+    });
+
+    map = new L.Map('lowres_map_container', {
+      center: new L.LatLng(51.50757, -0.1078), 
+      zoom: 14
+    });
+
+    var cloudmadeUrl = 'http://107.20.174.7:81/osm_tiles2/{z}/{x}/{y}.png',
+      cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18});
+
+    map.addLayer(cloudmade);
+
+    jQuery('<div id="map_spinner" style="display:none;position:relative;left:255px;top:188px;"><img src="/images/loading.gif" alt="Please wait"/></div>').appendTo('#lowres_map_container');
+
+    /*map.on('viewreset', function(e) {
+      //alert('viewreset');
+      jQuery('#map_spinner').show();
+    });*/
+
+    if(#{ ! @tour.errors.blank?} && #{ ! params[:location].blank? }) {
+      added_loi_list.push(#{ params[:location].to_a.collect{|tl| tl.split('_')[1]}.join(',') });
+      show_lois_on_the_maps();
+    } else if(#{!@tour.tour_locations.empty?}) {
+      added_loi_list.push(#{ @tour.tour_locations.collect{|tl| tl.location.id}.join(',') });
+      show_lois_on_the_maps();
+    }
+  });
+
+  function checkSelectedLOIs() {
+    var existingLOIs = Ext.DomQuery.select('.existing-locations-list li');
+
+    for (var i=0; i<existingLOIs.length; i++){
+      var loi = Ext.get(existingLOIs[i]);
+      var loiId = loi.child("input[name=loi-id]").dom.value;
+      if(added_loi_list.indexOf(parseInt(loiId)) != -1) {
+        loi.addClass("added");
+        loi.addClass("x-hidden");
+      }
+    }
+
+    var locations_list_container = jQuery('.locations_status_bar');
+    if(jQuery('.existing-locations-list').length > 0) {
+      if(jQuery('.existing-locations-list li').length == 0) {
+        locations_list_container.html('<p>Found no LOIs for ' + jQuery('#tour_city').val() + ', ' + jQuery('#tour_country').val() + '</p>');
+      } else if(jQuery('.existing-locations-list li').length == jQuery('.existing-locations-list li.x-hidden').length) {
+        locations_list_container.html('<p>All LOIs for ' + jQuery('#tour_city').val() + ', ' + jQuery('#tour_country').val() + ' are already added</p>');
+      } else {
+        locations_list_container.html('');
+      }
+    }
+  }
+
+  var added_loi_list = [];
+  var deleted_items_list = [];
+  if(#{ ! @deleted_items.blank?}) {
+    deleted_items_list.push(#{@deleted_items});
+    jQuery('#deleted_items_list').val(deleted_items_list.join(','));
+  }
+  var lowres_markers_for_added_loi = [];
+
+  function addLOIsToList() {
+    var existingLOIs = Ext.DomQuery.select('.existing-locations-list li');
+    
+    for (var i=0; i < existingLOIs.length; i++){
+      var loi = Ext.get(existingLOIs[i]);
+      var loiId = loi.child("input[name=loi-id]").dom.value;
+      if (loi.hasClass("added")){
+        if(added_loi_list.indexOf(parseInt(loiId)) == -1) {
+          added_loi_list.push(parseInt(loiId));
+          appendLocationToList(loiId);
+        }
+      } else {
+        //deleteLOI(loiId);
+      }
+    }
+    jQuery('#locations_order_serialized').val(jQuery( "#sortable" ).sortable( "serialize", {attribute: "loi_info", expression: /(location)_(\d*_\d*)/} ));
+    show_lois_on_the_maps();
+  }
+
+  function show_lois_on_the_maps() {
+    for(var i = 0; i < lowres_markers_for_added_loi.length; i++) { map.removeLayer(lowres_markers_for_added_loi[i]); }
+    lowres_markers_for_added_loi = [];
+    jQuery.post('/locations/get_coordinates_for_loi', {authenticity_token: "#{form_authenticity_token}", ids: added_loi_list}, function(response) {
+      var bounds_points_array = [];
+      if(response) {
+        for(var i = 0; i < response.length; i++) {
+          var latlng = new L.LatLng(response[i][0], response[i][1]);
+          bounds_points_array.push(latlng);
+
+          var MyIcon = L.Icon.extend({
+            iconUrl: "/images/icons/pins/pin"+(i+1)+".png",
+            shadowUrl: '/javascripts/leaflet/images/marker-shadow.png',
+            iconSize: new L.Point(24, 40),
+            iconAnchor: new L.Point(12, 40)
+          });
+          var icon = new MyIcon();
+          var marker = new L.Marker(latlng, {icon: icon}); // title: ('LOI #'+(i+1))
+          lowres_markers_for_added_loi.push(marker);
+          //map.addLayer(marker);
+        }
+        var cm_latlng_bounds = new L.LatLngBounds(bounds_points_array);
+        var min_zoom_level_for_bounds = map.getBoundsZoom(cm_latlng_bounds);
+        map.setView(cm_latlng_bounds.getCenter(), min_zoom_level_for_bounds);
+
+        for(var i = 0; i < lowres_markers_for_added_loi.length; i++) {
+          map.addLayer(lowres_markers_for_added_loi[i]);
+        }
+      }
+    });
+  }
+
+  function appendLocationToList(loiId){
+    var list = Ext.DomQuery.select(".locations-list")[0];
+    var existingLocation = document.getElementById("existing_loi_" + loiId);
+    existingLocation = Ext.get(existingLocation);
+    var loiName = existingLocation.child(".loi-name-field").dom.innerHTML;
+    var loiComment = existingLocation.child(".loi-comment-field").dom.innerHTML;
+
+    jQuery('#sortable').append('<li id="loi_id_'+loiId+'" class="ui-state-default" loi_info="location_0_'+loiId+'"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span><div class="loi_details">'+ loiName +' ['+ loiComment +']</div><div class="delete_btn" onclick="deleteLOI('+loiId+')"></div></li>');
+
+    jQuery('#locations_order_serialized').val(jQuery( "#sortable" ).sortable( "serialize", {attribute: "loi_info", expression: /(location)_(\d*_\d*)/} ));
+  }
+
+  function deleteLOI(id) {  
+    jQuery('.ui-sortable li#loi_id_'+id).detach();
+    // preview remaining LOI markers on maps
+    added_loi_list.splice(added_loi_list.indexOf(id), 1);
+    show_lois_on_the_maps();
+    deleted_items_list.push(id);
+    jQuery('#deleted_items_list').val(deleted_items_list.join(','));
+    jQuery('#locations_order_serialized').val(jQuery( "#sortable" ).sortable( "serialize", {attribute: "loi_info", expression: /(location)_(\d*_\d*)/} ));
+    return false;
+  }
+
+  tabsWin = null;
+  
+  function loi_in_selected_place() {
+    var in_country = jQuery('#tour_country').val();
+    var in_city = jQuery('#tour_city').val();
+    var in_place = '';
+    if(in_country != '') { 
+      in_place += '&in_country='+in_country 
+    }
+    if(in_city != '') { 
+      in_place += '&in_city='+encodeURIComponent(in_city) 
+    }
+    return in_place;
+  }
+
+  function addExistingLOI() {
+    if ( !tabsWin) {
+      tabsWin = new Ext.Window({
+        title: 'Add Existing LOIs for '+jQuery('#tour_city').val()+', '+jQuery('#tour_country').val(),
+        closable:true,
+        width:377,
+        height:400,
+        plain:true,
+        region: 'center',
+        layout: 'fit',
+        defaults:{autoScroll:true},
+        modal: true,
+        items:[{
+          iconCls: 'location-tab',
+          listeners: {
+            render: function() {
+              searchButton = new Ext.Button({renderTo:'search-button-container',
+                text: 'Search',
+                width: 65,
+                handler: function(){
+                  jQuery('.search_spinner').show();
+                  jQuery('.locations_status_bar').html('');
+                  Ext.Ajax.request({
+                    url : '/locations/search?term='+encodeURIComponent(jQuery('#loi_search').val())+loi_in_selected_place(),
+                    params: {format: 'json'},
+                    method: 'GET',
+                    success: function ( result, request ) {
+                      $('.search_spinner').hide();
+                      var res = Ext.util.JSON.decode(result.responseText), res_ids = [];
+                      for(var i = 0; i < res.length; i++) { console.log(res[i]['id']);res_ids.push(res[i]['id']) }; // ['location']
+                      var allMedia = Ext.DomQuery.select('.existing-locations-list li');
+                      var selected_locations_ids = added_loi_list;
+                      for (var i = 0; i < allMedia.length; i++){
+                        var curMedia = Ext.get(allMedia[i]);
+                        var curMediaId = parseInt(curMedia.child("input[name=loi-id]").dom.value);
+                        if (res_ids.indexOf(curMediaId) == -1 || selected_locations_ids.indexOf(curMediaId) != -1) {
+                          curMedia.addClass("x-hidden");
+                        } else {
+                          curMedia.removeClass("x-hidden");
+                        }
+                      }
+                      var locations_list_container = jQuery('.locations_status_bar');
+                      if(jQuery('.existing-locations-list li').length == 0 || jQuery('.existing-locations-list li').length == jQuery('.existing-locations-list li.x-hidden').length) {
+                        locations_list_container.html('<p>This query returned no media for ' + jQuery('#tour_city').val() + ', ' + jQuery('#tour_country').val() + '</p>');
+                      } else {
+                        locations_list_container.html('');
+                      }
+                    },
+                    failure: function ( result, request) { 
+                      Ext.MessageBox.alert('Failed ', result.responseText); 
+                    } 
+                  });
+                }
+              });
+
+              this.load({
+                url: '/locations.js?'+loi_in_selected_place(),
+                text: 'Loading Existing Locations...',
+                callback: checkSelectedLOIs
+              })
+            }
+          }
+        }],
+        closeAction: 'close',
+        fbar: [{
+          text: 'Cancel',
+          handler: function(){closeAddExistingLOIWindow();}
+        },{
+          html: '<div style="height:18px;float:left;"><div class="search_spinner" style="display:none"><img src="/images/spinner.gif" alt="Please wait"/> Searching</div><div class="locations_status_bar"></div></div><div style="clear:both"></div> <div class="search-bar" style="float:left;width:190px;background-color:#ced9e7;"><div class="left"><input type="text" name="loi_search" id="loi_search"/></div><div id="search-button-container" class="left search-button-container"></div></div><div class="clear"></div>'
+        },{
+          text: 'Ok',
+          handler: function(){addLOIsToList(); closeAddExistingLOIWindow();}
+        }]
+      });
+    }
+
+    tabsWin.on('beforeclose', function(){ tabsWin = null;}, this);
+    tabsWin.show(this);
+    checkSelectedLOIs();
+  }
+
+  function closeAddExistingLOIWindow() {
+    tabsWin.close(this);
+    tabsWin = null;
+  }
+
+  function getFBar() {
+    return [
+    {
+      text: 'Cancel',
+      handler: function(){
+        location.href = "/tours/#{@tour.id.to_s}";
+      }
+    },
+    '->',
+    {
+      text: 'Save',
+      handler: function(){saveFormItem();}
+    }]
+  }

@@ -1,0 +1,5 @@
+.location-categories
+  %b Categories
+  %ul
+    - for category in Location.category_counts
+      %li= link_to "#{category.name} (#{category.count})", locations_path(current_scopes.merge(:tagged_with => category.name))

@@ -1,0 +1,23 @@
+<li>
+  <a href="<%= url_for(:controller => 'ubertours', :action => 'show', :id => ubertour.id) %>" class="<%= @ubertour && ubertour == @ubertour ? 'active' : ''%>">
+    <div class="minimize-btn" onclick="return minimize(this)" style="<%= @ubertour && ubertour == @ubertour ? '' : "display: none;" %>">minimize</div>
+    <div class="maximize-btn" onclick="return maximize(this)" style="<%= @ubertour && ubertour == @ubertour ? "display: none;" : '' %>">maximize</div>
+    <div class="loi-only-name"><%= ubertour.name %></div>
+    <div class="loi-status loi-<%= tour_status(ubertour) %>">
+      <%= ubertour.updated_at.strftime("%d.%m.%Y") %>
+    </div>
+  </a>
+  <ul class="tour-locations-list" style="<%= @ubertour && ubertour == @ubertour ? '' : "display: none;" %>">
+    <% for tour in ubertour.children do %>
+      <li>
+        <div class="loi-thumb">
+          <% if tour.thumbnail? %>
+            <%= image_tag tour.thumbnail.url %>
+          <% end %>
+        <div class="loi-name">
+          <%= tour.name %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+</li>

@@ -1,0 +1,71 @@
+!!! Strict
+%html
+  %head
+    %title Digital Footsteps Tours
+    = stylesheet_link_tag 'ext-all', 'grid-layout', 'ui-lightness/jquery-ui-1.8.16.custom.css', 'style'
+
+    = javascript_include_tag '/javascripts/jquery/jquery-1.6.2.js'
+    = javascript_include_tag '/javascripts/jquery/jquery-ui-1.8.16.custom.min.js'
+    = javascript_include_tag '/javascripts/jquery/jquery.ui.autocomplete.html.js'
+    = javascript_include_tag '/javascripts/extjs/adapter/jquery/ext-jquery-adapter.js'
+
+    = javascript_include_tag '/javascripts/extjs/adapter/ext/ext-base.js'
+    =# javascript_include_tag '/javascripts/prototype.js'
+    = javascript_include_tag '/javascripts/extjs/ext-all.js'
+    = javascript_include_tag 'application'
+
+  %body
+    #header.header
+      = render :partial => "layouts/header"
+    = render :partial => "layouts/notifications"
+    #menu-container.menu-container
+      = render :partial => "layouts/media_menu"
+      - content_for :menu
+    #grid-panel
+      #container1{:style => "display:none;position:absolute;"}
+      = yield
+    :javascript
+    
+      Ext.onReady(function() {
+        var viewport = new Ext.Viewport({
+          layout:'anchor',
+          border: false,
+          anchorSize: {width:800, height:600},
+          items:[{
+            contentEl: 'header',
+            height: 130,
+            anchor: '100%',
+            hidelabel: true,
+            border: false
+          }, {
+            anchor:'100% -130',
+            hidelabel: true,
+            bodyStyle: 'background-color: #ccc;',
+            layout: 'hbox',
+            border: false,
+            autoScroll: true,
+            layoutConfig: {
+              align : 'stretch'
+            },
+            items: [{
+              width: 185,
+              bodyStyle: 'background-color: #ccc;',
+              autoScroll: true,
+              contentEl:'menu-container',
+              border: false
+            }, {
+              flex: 1,
+              bodyStyle: 'background-color: #ccc;',
+              border: false,
+              layout: 'hbox',
+              margins:'5 5 5 0',
+              layoutConfig: {
+                align : 'stretch',
+                pack  : 'start',
+                margins: '5 5 5 0'
+              },
+              items: [ grid ]
+            }]
+          }]
+        });
+      });

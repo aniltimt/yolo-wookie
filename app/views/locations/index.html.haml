@@ -1,0 +1,69 @@
+- content_for :list_title, 'Locations'
+- content_for :details_title, 'LOI info'
+- content_for :categories_menu do
+  = render :partial => "menu/locations"
+- content_for :loi_list do
+  = render :partial => "locations/index"
+
+
+- content_for :loi_info do
+
+  :javascript
+    Ext.onReady(function() {
+      new Ext.Panel({
+        renderTo: 'overview-container',
+        title: 'Overview',
+        contentEl: 'overview-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        }
+      });
+
+      new Ext.Panel({
+        renderTo: 'map-container',
+        title: 'Map',
+        contentEl: 'map-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        },
+        autoScroll: true
+      });
+
+      new Ext.Panel({
+        renderTo: 'details-container',
+        title: 'Details',
+        contentEl: 'details-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        }
+      });
+
+      new Ext.Panel({
+        renderTo: 'media-container',
+        title: 'Media',
+        contentEl: 'media-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        }
+      });
+    });
+
+    function getFBar() {
+      return [];
+    }

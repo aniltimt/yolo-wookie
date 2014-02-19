@@ -1,0 +1,24 @@
+!!! Strict
+%html
+  %head
+    %title Digital Footsteps Tours
+    = stylesheet_link_tag 'ext-all', 'grid-layout', '/ui-lightness/jquery-ui-1.8.16.custom.css', 'style'
+
+    = javascript_include_tag '/javascripts/jquery/jquery-1.6.2.js'
+    = javascript_include_tag '/javascripts/jquery/jquery-ui-1.8.16.custom.min.js'
+    = javascript_include_tag '/javascripts/jquery/jquery.ui.autocomplete.html.js'
+    = javascript_include_tag '/javascripts/extjs/adapter/jquery/ext-jquery-adapter.js'
+
+    = javascript_include_tag '/javascripts/extjs/adapter/ext/ext-base.js'
+    = javascript_include_tag '/javascripts/extjs/ext-all.js'
+    = javascript_include_tag 'application'
+
+    %style{:type => 'text/css'}
+      \.navigation-bar {top: 105px;}
+  %body
+    #header.header
+      = render :partial => "layouts/header"
+    #menu-container.menu-container
+      - content_for :menu
+    #grid-panel
+      = yield

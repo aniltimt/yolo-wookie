@@ -1,0 +1,11 @@
+/*
+For hidden file selection and form
+*/
+.au-hidden, .au-hidden *, *.au-hidden {
+	visibility: hidden;
+	width:1px;
+	height:1px;
+	display:block;
+	z-index:-99;
+	position:absolute;
+}

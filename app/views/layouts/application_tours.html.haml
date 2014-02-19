@@ -1,0 +1,377 @@
+!!! Strict
+%html
+  %head
+    %title Digital Footsteps Tours
+    -# = stylesheet_link_tag '/stylesheets/blueprint/screen.css'
+    -# = stylesheet_link_tag '/stylesheets/blueprint/print.css', :media => 'print'
+    -# / [If lt IE 8]
+    -#   = stylesheet_link_tag '/stylesheets/blueprint/ie.css'
+    -# = stylesheet_link_tag '/stylesheets/blueprint/plugins/fancy-type/screen.css'
+    = stylesheet_link_tag '/stylesheets/ext-all.css'
+    = stylesheet_link_tag '/stylesheets/layout.css'
+    = stylesheet_link_tag '/stylesheets/web-maps-lite.css'
+
+    = javascript_include_tag '/javascripts/extjs/adapter/ext/ext-base.js'
+    = javascript_include_tag '/javascripts/extjs/ext-all.js'
+
+    = javascript_include_tag '/javascripts/web-maps-lite.js'
+
+  %body
+    #header.header
+      = render :partial => "layouts/header"
+    = render :partial => "layouts/notifications"
+    #menu-container.menu-container
+      yield :left_menu
+    #list-panel.x-hidden
+      #loi-list
+        %ul
+          %li
+            %a
+              .loi-only-name
+                Architecture and Historical Places of London
+              .loi-status.loi-published
+                12.14.2010
+              .clear
+          %li
+            %a
+              .loi-only-name
+                City of London
+              .loi-status.loi-outdated
+                12.14.2010
+              .clear
+          %li
+            %a
+              .loi-thumb
+                %img{:src => '/images/lois/bigben.jpg'}
+              .loi-name
+                Big ben
+                %br
+                  %span.loi-comment Comment
+              .loi-status.loi-draft
+                12.14.2010
+              .clear
+          %li
+            %a
+              .loi-thumb
+                %img{:src => '/images/lois/st_pauls_cathedral.jpg'}
+              .loi-name
+                St. Paul's Cathedral
+                %br
+                  %span.loi-comment Comment
+              .loi-status.loi-draft
+                12.14.2010
+              .clear
+          %li
+            %a
+              .loi-thumb
+                %img{:src => '/images/lois/buckingham_palace.jpg'}
+              .loi-name
+                Buckngham Palace
+              .clear
+          %li
+            %a
+              .loi-thumb
+                %img{:src => '/images/lois/st_james_park.jpg'}
+              .loi-name
+                St. James's Park
+              .clear
+          %li
+            %a
+              .loi-thumb
+                %img{:src => '/images/lois/st_pauls_cathedral.jpg'}
+              .loi-name
+                Westminster Abbey
+              .clear
+          %li
+            %a
+              .loi-thumb
+                %img{:src => '/images/lois/buckingham_palace.jpg'}
+              .loi-name
+                Buckngham Palace
+              .clear
+          %li
+            %a
+              .loi-only-name
+                London Museums
+              .loi-status.loi-published
+                12.14.2010
+              .clear
+          %li
+            %a
+              .loi-only-name
+                Oxform University
+              .loi-status.loi-draft
+                12.14.2010
+              .clear
+    #details-panel
+      #overview-container
+        #overview-block.x-hidden
+          .form-row
+            %label{:for => 'location_name'} Location name
+            %input{:name => 'location_name'}
+          .form-row
+            %label{:for => 'country'} Country
+            %input{:name => 'country'}
+          .form-row
+            %label{:for => 'city'} City
+            %input{:name => 'city'}
+          .form-image-row.form-row
+            %label{:for => 'city'} Image
+            .form-image-thumb
+            %input{:name => 'city', :type => 'file'}
+            %br
+            %span.remark
+              No image loaded
+          .form-row
+            %label{:for => 'comment'} Comment
+            %input{:name => 'comment'}
+          .form-row
+            %label{:for => 'categories'} Categories
+            %input{:name => 'categories'}
+          .form-row
+            %label{:for => 'latitude'} Lat Lon    
+            %input.short{:name => 'latitude'}
+            %input.short{:name => 'longitude'}
+      #map-container
+        #map-block.x-hidden
+
+      #details-container
+        #details-block.x-hidden
+          .form-short-textarea-row.form-row
+            %label{:for => 'short_description'} Short description
+            %textarea{:name => 'short_description'}
+          .form-row
+            %label{:for => 'address'} Address
+            %input{:name => 'address'}
+          .form-row
+            %label{:for => 'phone'} Phone
+            %input{:name => 'phone'}
+          .form-row
+            %label{:for => 'website'} Website
+            %input{:name => 'website'}
+          .form-row
+            %label{:for => 'email'} Email
+            %input{:name => 'email'}
+          .form-row
+            %label{:for => 'opening_hours'} Opening hours
+            %input{:name => 'opening_hours'}
+          .form-row
+            %label{:for => 'entrance_fee'} Entrance Fee
+            %input{:name => 'entrance_fee'}
+          .form-row
+            %label{:for => 'nearest_tube_st'} Nearest Tube st.
+            %input{:name => 'nearest_tube_st'}
+          .form-textarea-row.form-row
+            %label{:for => 'long_description'} Long description
+            %textarea{:name => 'long_description'}
+      #media-container
+        #media-block.x-hidden
+          #upload-new-media-button.button-container
+          .text{:style => 'float:left;padding-top:7px;'} or
+          #add-existing-media-button.button-container
+          .clear
+      .filters
+        = yield :filters
+      .scaffold
+        = yield
+    #footer.footer
+      = render :partial => "layouts/footer"
+    :javascript
+
+      var layer = new CM.Tiles.CloudMade.Web({
+        key: 'd69ac3a363e55a64b1fae4989542cf89',
+        styleId: "#{Cloudmade::MAP_STYLE_ID}"
+      });
+      var map = new CM.Map('map-block', layer);
+      map.addControl(new CM.LargeMapControl());
+      map.addControl(new CM.ScaleControl());
+      map.enableMouseZoom();
+      map.setCenter(new CM.LatLng(51.50757, -0.1078), 15);
+
+      function addExistingMedia() {
+        alert('add existing media');
+        var tabs = new Ext.TabPanel({
+          region: 'center',
+          margins:'3 3 3 0', 
+          activeTab: 0,
+          defaults:{autoScroll:true},
+
+          items:[{
+            title: 'Bogus Tab',
+            html: '<h1>Bogus Tab</h1>'
+          },{
+            title: 'Another Tab',
+            html: '<h1>Aeton Tab</h1>'
+          },{
+            title: 'Closable Tab',
+            html: '<h1>cols Tab</h1>',
+            closable:true
+          }]
+        });
+
+        // Panel for the west
+        var nav = new Ext.Panel({
+          title: 'Navigation',
+          region: 'west',
+          split: true,
+          width: 200,
+          collapsible: true,
+          margins:'3 0 3 3',
+          cmargins:'3 3 3 3'
+        });
+
+        var win = new Ext.Window({
+          title: 'Layout Window',
+          closable:true,
+          width:600,
+          height:350,
+          //border:false,
+          plain:true,
+          layout: 'border',
+          modal: true,
+          items: [nav, tabs]
+        });
+
+        win.show(this);
+      }
+      
+      Ext.onReady(function() {
+
+        buttonObject = new Ext.Button({renderTo:'upload-new-media-button',
+          text: 'Upload new media',
+          width: 145,
+          handler: function(){alert('TODO: add Upload new media action!');}
+        });
+
+        buttonObject = new Ext.Button({renderTo:'add-existing-media-button',
+          text: 'Add existing',
+          width: 145,
+          handler: function(){addExistingMedia();}
+        });
+
+        var viewport = new Ext.Viewport({
+          layout:'anchor',
+          border: false,
+          anchorSize: {width:800, height:600},
+          items:[{
+            contentEl: 'header',
+            height: 100,
+            anchor: '100%',
+            hidelabel: true,
+            border: false
+          }, {
+            anchor:'100% -100',
+            hidelabel: true,
+            bodyStyle: 'background-color: #ccc;',
+            layout: 'hbox',
+            border: false,
+            autoScroll: true,
+            layoutConfig: {
+              align : 'stretch'
+            },
+            items: [{
+              width: 185,
+              bodyStyle: 'background-color: #ccc;',
+              autoScroll: true,
+              contentEl:'menu-container',
+              border: false
+            }, {
+              flex: 1,
+              bodyStyle: 'background-color: #ccc;',
+              border: false,
+              layout: 'hbox',
+              margins:'5 5 5 0',
+              layoutConfig: {
+                align : 'stretch',
+                pack  : 'start',
+                margins: '5 5 5 0'
+              },
+              items: [{
+                width: 342,
+                bodyStyle: 'background-color:#fff;overflow-y:auto;',
+                contentEl:'list-panel',
+                title: 'Tours',
+                headerCfg: {
+                  cls: 'options-block-header'
+                }
+              }, {
+                flex: 1,
+                bodyStyle: 'background-color:#fff;overflow-y:auto;',
+                title: 'LOI Info - Editing',
+                margins: '0 0 0 5',
+                headerCfg: {
+                  cls: 'options-block-header'
+                },
+                contentEl: 'details-panel',
+                buttonAlign: 'left',
+                fbar: [{
+                  text: 'Cancel',
+                  handler: function(){alert('TODO: add Cancel action!');}
+                },'->',{
+                  text: 'Save and Exit',
+                  handler: function(){alert('TODO: add Save and Exit action!');}
+                },{
+                  text: 'Save',
+                  handler: function(){alert('TODO: add Save action!');}
+                }]
+              }]
+            }]
+          }]
+        });
+
+        new Ext.Panel({
+          renderTo: 'overview-container',
+          title: 'Overview',
+          contentEl: 'overview-block',
+          collapsible: true,
+          headerCfg: {
+            cls: 'block-header'
+          },
+          layoutConfig: {
+            align : 'stretch'
+          }
+        });
+
+        new Ext.Panel({
+          renderTo: 'map-container',
+          title: 'Map',
+          contentEl: 'map-block',
+          collapsible: true,
+          headerCfg: {
+            cls: 'block-header'
+          },
+          layoutConfig: {
+            align : 'stretch'
+          },
+          autoScroll: true
+        });
+
+        new Ext.Panel({
+          renderTo: 'details-container',
+          title: 'Details',
+          contentEl: 'details-block',
+          collapsible: true,
+          headerCfg: {
+            cls: 'block-header'
+          },
+          layoutConfig: {
+            align : 'stretch'
+          }
+        });
+
+        new Ext.Panel({
+          renderTo: 'media-container',
+          title: 'Media',
+          contentEl: 'media-block',
+          collapsible: true,
+          headerCfg: {
+            cls: 'block-header'
+          },
+          layoutConfig: {
+            align : 'stretch'
+          }
+        });
+      });
+
+
+  

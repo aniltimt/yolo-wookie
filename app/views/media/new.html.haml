@@ -1,0 +1,14 @@
+- form_for resource, :html => {:multipart => true} do |f|
+  %p
+    = f.error_messages
+  %p
+    = f.label :name
+    = f.text_field :name
+  %p
+    = f.label :description
+    = f.text_area :description
+  %p
+    = f.label :attachment
+    = f.file_field :attachment
+  %p
+    = f.submit 'Add'

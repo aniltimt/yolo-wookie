@@ -1,0 +1,81 @@
+<% if collection.empty? -%>
+  <span class="remark">No tours yet</span>
+<% else -%>
+  <% if cache_key.nil? -%>
+    <ul class="tour-list">
+      <%= render :partial => 'tour', :collection => collection -%>
+    </ul>
+  <% else -%>
+    <% cache(cache_key) do %>
+      <ul class="tour-list">
+        <%= render :partial => 'tour', :collection => collection -%>
+      </ul>
+    <% end %>
+  <% end -%>
+<% end -%>
+
+<script type="text/javascript">
+  <% if @tour %>
+  if(jQuery("#tour_li_<%=@tour.id%>").length > 0) {
+    jQuery("#tour_li_<%=@tour.id%> a").addClass('active');
+    jQuery("#tour_li_<%=@tour.id%> a .maximize-btn").css({display: 'none'});
+    jQuery("#tour_li_<%=@tour.id%> a .minimize-btn").show();
+    jQuery("#tour_li_<%=@tour.id%> ul.tour-locations-list").show();  
+  }
+  <% if @tour.building? %>
+    jQuery('#tour_li_<%=@tour.id%> a .loi-status').addClass('loi-building');
+  <% end %>
+  <% end %>
+
+  function getLocationsList(btn){
+    btn = Ext.get(btn);
+    currentTour = btn.findParent("li", 10, true);
+
+    return currentTour.child(".tour-locations-list");
+  }
+
+  function toggleMinMaxButtons(btn){
+    btn = Ext.get(btn);
+    currentTour = btn.findParent("li", 10, true);
+    maxBtn = currentTour.child(".maximize-btn");
+    if(btn != maxBtn)
+      othrBtn = maxBtn;
+    else
+      othrBtn = currentTour.child(".minimize-btn");
+
+    btn.setVisibilityMode(Ext.Element.DISPLAY);
+    othrBtn.setVisibilityMode(Ext.Element.DISPLAY);
+
+    btn.hide();
+    othrBtn.show();
+  }
+
+  function minimize(minBtn){
+    toggleMinMaxButtons(minBtn);
+    locationsList = getLocationsList(minBtn);
+
+    locationsList.setVisibilityMode(Ext.Element.DISPLAY);
+
+    locationsList.hide();
+
+    return false;
+  }
+
+  function maximize(maxBtn){
+    toggleMinMaxButtons(maxBtn);
+    locationsList = getLocationsList(maxBtn);
+
+    locationsList.setVisibilityMode(Ext.Element.DISPLAY);
+
+    locationsList.show();
+
+    return false;
+  }
+  
+  // Very stupid hack
+  setTimeout(function() {
+    if($('#list-panel').find('.active').length !== 0) {
+      $('#list-panel').parent().scrollTo($('#list-panel').find('.active'));
+    }
+  }, 500);
+</script>

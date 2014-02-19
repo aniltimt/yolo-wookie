@@ -1,0 +1,57 @@
+#new-loi-button.new-button
+
+#cities-container
+
+- tags = current_scopes.slice(:tagged_with)
+#cities.x-hidden
+  %ul.options-block
+    %li{:class => "#{"selected" unless current_scopes[:in_country] or current_scopes[:in_city]}"}
+      = link_to "All", locations_path(tags)
+    - Location.by_user(current_user).country_cities.group_by{|l| l.country}.each_pair do |country, cities|
+      %li.country{:class => "#{'selected' if current_scopes[:in_country] == country}"}
+        = link_to country, locations_path({:in_country => country}.merge(tags))
+      - for city in cities
+        %li.city{:class => "#{'selected' if current_scopes[:in_city] == city.city && current_scopes[:in_country] == country}"}
+          = link_to city.city, locations_path({:in_city => city.city, :in_country => country}.merge(tags))
+
+
+#categories-container
+
+- location_filters = current_scopes.slice(:in_city, :in_country)
+#categories.x-hidden
+  %ul.options-block
+    %li{:class => (current_scopes[:tagged_with].blank? ? "selected" : "")}= link_to 'All', locations_path({:tagged_with => false}.merge(location_filters))
+    - for category in Location.category_counts_by_name
+      %li{:class => "#{'selected' if current_scopes[:tagged_with] == category.name}"}
+        = link_to category.name, locations_path(location_filters.merge(:tagged_with => category.name)), :title => category.name
+
+:javascript
+  Ext.onReady(function() {
+    buttonObject = new Ext.Button({renderTo:'new-loi-button',
+      text: 'Create New LOI',
+      width: 145,
+      handler: function(){location.href = '#{new_location_url}'}
+    });
+
+    new Ext.Panel({
+      renderTo: 'cities-container',
+      width: 145,
+      title: 'By cities',
+      contentEl: 'cities',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'categories-container',
+      width: 145,
+      title: 'By Categories',
+      contentEl: 'categories',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+  });

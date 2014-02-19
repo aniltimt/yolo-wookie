@@ -1,0 +1,151 @@
+<% content_for :list_title, 'Tours' %>
+<% content_for :details_title, 'Tour info' %>
+<% content_for :categories_menu do %>
+  <%= render :partial => "menu/ubertours" %>
+<% end %>
+<% content_for :loi_list do %>
+  <%= render :partial => "ubertours/index" %>
+<% end %>
+
+<% content_for :loi_info do %>
+  <div id="overview-container">
+    <div id="overview-block">
+      <div class="form-row">
+        <span class="label">Tour name</span>
+        <span class="bold"><%= @ubertour.name %></span>
+      </div>
+      <div class="form-row">
+        <span class="label">Country</span>
+        <span class="bold"><%= country_from_iso_code(@ubertour.country) %></span>
+      </div>
+      <div class="form-row">
+        <span class="label">City</span>
+        <span class="bold"><%= @ubertour.city %></span>
+      </div>
+      <div class="form-row">
+        <span class="label">Overview</span>
+        <span><%= @ubertour.overview %></span>
+      </div>
+      <div class="form-row">
+        <span class="label">Intertour route type</span>
+        <span>by <%= @ubertour.ubertour_route_type %></span>
+      </div>
+      <% if @ubertour.length_in_km %>
+        <div class="form-row">
+          <span class="label">Distance</span>
+          <span><%= distance_in_kilometers(@ubertour.length_in_km) %>
+        </div>
+      <% end %>
+      <% if @ubertour.length_in_minutes %>
+        <div class="form-row">
+          <span class="label">Travel time</span>
+          <span><%= distance_in_time(@ubertour.length_in_minutes) %></span>
+        </div>
+      <% end %>
+      <div class="form-row">
+        <span class="label">Images</span>
+        <ul class="image-list">
+          <% thumbs = @ubertour.children.collect{|t| t.locations.select(&:thumbnail?).map(&:thumbnail)}.flatten.first(4) %>
+          <% thumbs.each do |thumb| %>
+            <li><%= image_tag thumb.url %></li>
+          <% end %>
+        </ul>
+      </div>
+      <div style="clear:both"></div>
+      <div class="form-row">
+        <span class="label">Tours</span>
+      </div>
+      <div style="clear:both"></div>
+      <ol class="tours-list" style="margin-left:125px;list-style-type:decimal;font:normal 12px Arial,Verdana,Tahoma,Helvetica,sans-serif">
+        <% @ubertour.children.each do |tour| %>
+          <li style="margin-top:10px;">
+            <div style="font-weight:bold"><%= tour.name %></div>
+            <div><%= tour.info %></div>
+          </li>
+        <% end %>
+      </ol>
+      <div class="form-row">
+        <span class="label">All LOI on the map</span>
+      </div>
+      <div id="map-block" class="form-row" style="margin-left:60px"></div>
+    </div>
+  </div>
+
+  <form class="x-hidden" method='post' id='ubertour_delete_form'>
+    <input type='hidden' name='_method' value='delete'/>
+    <input type='hidden' name='authenticity_token' value="<%= form_authenticity_token %>"/>
+  </form>
+
+  <form class="x-hidden" method='post' id='ubertour_schedule_form' action="/tours/<%= @ubertour.id %>/schedule_build">
+    <input type='hidden' name='_method' value='schedule_build'/>
+    <input type='hidden' name='authenticity_token' value="<%= form_authenticity_token %>"/>
+  </form>
+
+  <script type="text/javascript">
+    function getFBar() {
+      var schedule_btn = '<%= escape_javascript(@ubertour.build_message) %>';
+      var able_to_build = <%= !@ubertour.building? %>;
+      var last_build_failed = <%= @ubertour.failed? %>;
+      var last_build_failed_msg = last_build_failed ? '<%= escape_javascript(@ubertour.build_message) %>' : '';
+      var delete_button = '';
+        
+      if (<%= @ubertour.deletable? %>) {
+        delete_button = {
+          text: 'Delete Ubertour',
+          handler: function(){
+            if (confirm ('Are you sure you want to delete this ubertour?')) {
+              var form = document.getElementById('ubertour_delete_form');
+              form.submit();
+            }
+            return false;
+          }
+        }
+      }
+        
+      if (able_to_build) {
+        schedule_btn = {
+          text: 'Schedule build',
+          handler: function(){
+            var form = document.getElementById('ubertour_schedule_form');
+            form.submit();
+          }
+        }
+      } else if(last_build_failed) { 
+        schedule_btn = '' 
+      }
+      return [ schedule_btn, last_build_failed_msg,
+        '->',
+        delete_button,
+        {
+          text: 'Edit Ubertour',
+          handler: function(){
+            location.href =  "<%= url_for(:controller => 'ubertours', :action => 'edit', :id => @ubertour.id) %>";
+          }
+      }]
+    }
+
+    var map;
+
+    <%= render :partial => "shared_js" %>
+
+    Ext.onReady(function() {
+      map = new L.Map('map-block', {
+        center: new L.LatLng(51.50757, -0.1078), 
+        zoom: 14
+      });
+
+      var cloudmadeUrl = 'http://107.20.174.7:81/osm_tiles2/{z}/{x}/{y}.png',
+          cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18});
+
+      map.addLayer(cloudmade);
+
+      if(<%= !@ubertour.errors.blank? %> && <%= !@added_tours_list.blank? %>) {
+        added_tour_list.push(<%= @added_tours_list.blank? ? '' : @added_tours_list.join(',') %>);
+        show_tours_on_the_maps();
+      } else if(<%= !@ubertour.children.empty? %>) {
+        added_tour_list.push(<%= @ubertour.children.collect{|t| t.id}.join(',') %>);
+        show_tours_on_the_maps();
+      }
+    });
+  </script>
+<% end %>

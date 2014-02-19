@@ -1,0 +1,1 @@
+raise Exception.new("PLEASE DELETE FILE: #{__FILE__} TO START THIS APPLICATION IN PRODUCTION ENVIRONMENT") if Rails.env.production?

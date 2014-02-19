@@ -1,0 +1,77 @@
+#upload-new-media-win.x-hidden
+  - form_for(:medium, :url => media_path, :html => { :multipart => true, :id => 'upload_new_media_form', :target => 'upload_target' }) do |fm|
+    .popup-form-row
+      = fm.label :name
+      = fm.text_field :name
+    .popup-form-row
+      = fm.label :attachment
+      = fm.file_field :attachment
+      = hidden_field_tag :medium_callback
+    .popup-form-row
+      = fm.label :keywords
+      = fm.file_field :keywords
+    %p.hidden{:id => 'media-upload-process'}
+      Loading...
+      %img{:src => '/images/spinner.gif'}
+    #upload-error.error.right.x-hidden
+    .clear
+  %iframe.hidden-iframe{:id => 'upload_target', :name => 'upload_target', :src => '#'}
+
+:javascript
+
+  var uploadErrorContainer = Ext.get('upload-error');
+
+  function clearUploadForm() {
+    Ext.get('media-upload-process').hide();
+    uploadErrorContainer.addClass('x-hidden');
+  }
+
+  function startUpload() {
+    Ext.get('media-upload-process').show();
+    document.getElementById('upload_new_media_form').submit();
+  }
+
+  function uploadFailed() {
+    Ext.get('media-upload-process').hide();
+    uploadErrorContainer.update('There was an error during file upload!');
+    uploadErrorContainer.removeClass('x-hidden');
+    setTimeout(function() {
+      uploadErrorContainer.addClass('x-hidden');
+    }, 3000);
+    return true;
+  }
+
+  function closeNewMediaWindow() {
+    newMediaWindow.hide();
+    clearUploadForm();
+  }
+
+  function addNewMediaToLocation(media) {
+    //alert('New added media ID ' + id);
+    console.log(media);
+  }
+
+  Ext.onReady(function() {
+    newMediaWindow = new Ext.Window({
+      title: 'Upload New Media',
+      closable:true,
+      width: 400,
+      layout: 'fit',
+      plain: true,
+      bodyStyle:'padding:5px;',
+      contentEl: 'upload-new-media-win',
+      hidden: true,
+      modal: true,
+      closeAction: 'hide',
+      bodyCfg: {
+        cls: 'window-background'
+      },
+      fbar: [{
+        text: 'Cancel',
+        handler: function(){closeNewMediaWindow();}
+      },{
+        text: 'Ok',
+        handler: function(){startUpload();}
+      }]
+    });
+  });

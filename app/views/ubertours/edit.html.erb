@@ -1,0 +1,16 @@
+<% content_for :list_title, 'Ubertours' %>
+<% content_for :details_title, 'Ubertour info' %>
+
+<% content_for :categories_menu do %>
+  <%= render :partial => "menu/ubertours" %>
+<% end %>
+
+<% content_for :loi_list do %>
+  <%= render :partial => "ubertours/index" %>
+<% end %>
+
+<% content_for :loi_info do %>
+  <% form_for @ubertour, :url => "/ubertours/#{@ubertour.id}", :html => {:multipart => true, :id => 'new_tour', :method => 'put'}, :id => 'new_tour' do |f| %>
+    <%= render :partial => 'form', :locals => {:f => f} %>
+  <% end %>
+<% end %>

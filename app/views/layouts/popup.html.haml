@@ -1,0 +1,31 @@
+!!! Strict
+%html
+  %head
+    %meta{'http-equiv' => 'Content-Type', :content => "text/html; charset=utf-8"}
+    %title= yield(:title)
+    = stylesheet_link_tag '/stylesheets/ext-all.css'
+    = stylesheet_link_tag '/stylesheets/popup.css'
+
+    = javascript_include_tag '/javascripts/extjs/adapter/ext/ext-base.js'
+    = javascript_include_tag '/javascripts/extjs/ext-all.js'
+  %body
+    #popup-container.x-hidden
+      = yield
+
+  :javascript
+    Ext.onReady(function() {
+      var win = new Ext.Window({
+        title: '#{yield(:title)}',//'Layout Window',
+        closable:false,
+        width: 350,
+        minWidth: 350,
+        layout: 'fit',
+        plain: true,
+        bodyStyle:'padding:5px;',
+        contentEl: 'popup-container',
+        hidden: false,
+        bodyCfg: {
+          cls: 'window-background'
+        }
+      });
+    });

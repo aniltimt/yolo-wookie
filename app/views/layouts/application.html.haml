@@ -1,0 +1,145 @@
+!!! Strict
+%html
+  %head
+    %title Digital Footsteps Tours
+    = stylesheet_link_tag 'ext-all', 'layout', '/javascripts/leaflet/leaflet.css', 'ui-lightness/jquery-ui-1.8.16.custom.css', 'style', 'chosen'
+
+    = javascript_include_tag 'jquery/jquery-1.6.2.js'
+    = javascript_include_tag 'jquery/jquery-ui-1.8.16.custom.min.js'
+    = javascript_include_tag 'jquery/jquery.ui.autocomplete.html.js'
+    = javascript_include_tag 'jquery/jquery.form.js'
+    = javascript_include_tag 'extjs/adapter/jquery/ext-jquery-adapter.js'
+
+    = javascript_include_tag 'extjs/adapter/ext/ext-base.js'
+    = javascript_include_tag 'extjs/ext-all.js'
+
+    = javascript_include_tag 'leaflet/leaflet.js', 'jquery.scrollTo-min.js', 'jquery/jquery.lazyload.min.js', 'application', 'chosen/chosen.jquery.js'
+
+  %body
+    - unless user_signed_in?
+      = yield
+    -else
+      #header.header
+        = render :partial => "layouts/header"
+      #menu-container.menu-container
+        = yield :categories_menu
+      #list-panel.x-hidden
+        = yield :loi_list
+      #details-panel
+        = yield :loi_info
+      = render :partial => "layouts/edit_password"
+
+      :javascript
+
+        if(Ext.isSafari){ 
+          Ext.override(Ext.grid.GridView, { 
+            layout: function(){ 
+              this.scroller.dom.style.position = 'static'; 
+            } 
+          }); 
+        }
+      
+        Ext.onReady(function() {
+          var vsize = '100% -';
+          if(Ext.isWebKit)
+            vsize += '145';
+          else
+            vsize += '130';
+          var viewport = new Ext.Viewport({
+            layout:'anchor',
+            border: false,
+            bodyStyle: 'overflow: scroll;',
+            anchorSize: {width:800, height:600},
+            items:[{
+              contentEl: 'header',
+              height: 130,
+              anchor: '100%',
+              hidelabel: true,
+              border: false
+            }, {
+              anchor: vsize,
+              hidelabel: true,
+              bodyStyle: 'background-color: #ccc;',
+              layout: 'hbox',
+              border: false,
+              autoScroll: true,            
+              boxMinWidth: '1050',
+              layoutConfig: {
+                align : 'stretch'
+              },
+            
+              items: [{
+                width: 185,
+                bodyStyle: 'background-color: #ccc;',
+                autoScroll: true,
+                contentEl:'menu-container',
+                border: false
+              }, {
+                flex: 1,
+                bodyStyle: 'background-color: #ccc;',
+                border: false,
+                layout: 'hbox',
+                margins:'5 5 5 0',
+                layoutConfig: {
+                  align : 'stretch',
+                  pack  : 'start',
+                  margins: '5 5 5 0'
+                },
+              
+                items: [{
+                  width: 342,
+                  bodyStyle: 'background-color:#fff;overflow-y:auto;',
+                  contentEl:'list-panel',
+                  title: '#{yield :list_title}',
+                  headerCfg: {
+                    cls: 'options-block-header'
+                  }
+                }, {
+                  flex: 1,
+                  bodyStyle: 'background-color:#fff;overflow-y:auto;',
+                  title: '#{yield :details_title}',
+                  margins: '0 0 0 5',
+                  boxMinWidth: '500',
+                  headerCfg: {
+                    cls: 'options-block-header'
+                  },
+                  contentEl: 'details-panel',
+                  buttonAlign: 'left',
+                  fbar: getFBar()
+                }]
+              }]
+            }]
+          });
+        });
+
+      - if (@tour && !@tour.new_record?) || (@ubertour && !@ubertour.new_record?) 
+        :javascript
+          var update_tile_loading_progressbar_process;
+          Ext.onReady(function() {
+            jQuery('.x-panel-footer .x-toolbar-left').append('<div id="tile_loading_progressbar"></div>');
+          });
+          update_tile_loading_progressbar_process = setInterval(function() {
+            jQuery.get('/tours/#{(@tour || @ubertour).id}/get_build_status', function(response) {
+              console.log(response);
+              if(jQuery(".x-panel-footer .x-toolbar-left .xtb-text").length > 0) {
+                jQuery(jQuery(".x-panel-footer .x-toolbar-left .xtb-text")[0]).html(response);
+              }
+              var matches = response.match(/Loading tile #(\d*) of (\d*) total (hi|low)res tiles/);
+              
+              if(response == "Build complete") {
+                clearInterval(update_tile_loading_progressbar_process);
+                jQuery("#tile_loading_progressbar").progressbar('destroy');
+                jQuery('ul.tour-list li a.active div.loi-status').removeClass('loi-building').addClass('loi-published')
+              } else if (response.match(/^Build failed/)) {
+                clearInterval(update_tile_loading_progressbar_process);
+                jQuery("#tile_loading_progressbar").progressbar('destroy');
+                jQuery('ul.tour-list li a.active div.loi-status').removeClass('loi-building').addClass('loi-failed')
+              } else {
+                var matches = response.match(/Loading tile #(\d*) of (\d*) total (hi|low)res tiles/);
+                //console.log(matches);
+                if(matches && matches[1] && matches[2]) {
+                  jQuery("#tile_loading_progressbar").progressbar({value: 100* (parseFloat(matches[1]) / parseFloat(matches[2]))});
+                }
+              }
+            });
+          }, 7000);

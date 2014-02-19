@@ -1,0 +1,1 @@
+{success: true, results: <%= collection.total_entries %>, media: <%= collection.to_json(:methods => [:attachment_url, :human_size, :attachment_type, :tag_list, :country, :city, :deletable?], :use_standard => true) %>}

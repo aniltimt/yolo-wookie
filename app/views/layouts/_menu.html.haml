@@ -1,0 +1,64 @@
+#new-tour-button.new-button
+
+#statuses-container
+
+#statuses.x-hidden
+  %ul.options-block
+    %li.selected
+      %a
+        All Statuses
+    %li.draft
+      %a Draft
+    %li.published
+      %a Published
+    %li.outdated
+      %a Outdated
+
+#cities-container
+
+#cities.x-hidden
+  %ul.options-block
+    %li.selected
+      %a
+        All Cities
+    %li.country
+      %a UK
+    %li.city
+      %a London
+    %li.city
+      %a Oxford
+    %li.country
+      %a France
+    %li.city
+      %a Paris
+
+:javascript
+  Ext.onReady(function() {
+    buttonObject = new Ext.Button({renderTo:'new-tour-button',
+      text: 'Create New Tour',
+      width: 145,
+      handler: function(){alert('TODO: add create new tour action!');}
+    });
+    
+    new Ext.Panel({
+      renderTo: 'statuses-container',
+      width: 145,
+      title: 'By Status',
+      contentEl: 'statuses',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'cities-container',
+      width: 145,
+      title: 'By cities',
+      contentEl: 'cities',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+  });

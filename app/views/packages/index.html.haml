@@ -1,0 +1,3 @@
+%ul
+  - for package in @packages do
+    %li= link_to package.tour.name, "/builds/#{package.id}/tour.pack"

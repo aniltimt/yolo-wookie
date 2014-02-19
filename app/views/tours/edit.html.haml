@@ -1,0 +1,10 @@
+- content_for :list_title, 'Tours'
+- content_for :details_title, 'Tour info'
+- content_for :categories_menu do
+  = render :partial => "menu/tours"
+- content_for :loi_list do
+  = render :partial => "tours/index"
+
+- content_for :loi_info do
+  - form_for @tour, :html => {:multipart => true, :id => 'new_tour'}, :id => 'new_tour' do |f|
+    = render :partial => 'form', :locals => {:f => f}

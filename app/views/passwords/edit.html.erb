@@ -1,0 +1,27 @@
+<style>
+  body { background-color: #e4e4e4; }
+  input[type='text'],input[type='password'] { font-size: 24px; }
+  .alert {color: red;}
+  .notice {color: green;}
+</style>
+<div class="login_container">
+  <div class="curved drop-shadow">
+    <% form_for resource_name, resource, :url => password_path(resource_name), :html => { :method => :put } do |f| %>
+      <p style="text-align:center;margin-bottom:15px"><img src='/images/logo.jpg' title='Digital Footsteps' alt='Digital Footsteps'/></p>
+
+      <%= f.hidden_field :reset_password_token %>
+      <p><%= f.error_messages %></p>
+      <p class="notice"><%= flash[:notice] %></p>
+      <p class="alert"><%= flash[:alert] %></p>
+      <p><%= f.label :password, 'New password' %></p>
+      <p><%= f.password_field :password %></p>
+
+      <p><%= f.label :password_confirmation, 'Confirm new password' %></p>
+      <p><%= f.password_field :password_confirmation %></p>
+      <br />
+      <p><%= f.submit "Change my password" %></p>
+    <% end -%>
+
+    <%= render :partial => "shared/devise_links" %>
+  </div>
+</div>

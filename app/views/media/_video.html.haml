@@ -1,0 +1,4 @@
+.medium.video
+  - unless video.description.blank?
+    %p= video.description
+  = link_to 'View video', video.attachment.url

@@ -1,0 +1,10 @@
+- location_cities = Location.country_cities.group_by(&:country)
+.location-cities
+  %strong Cities
+  %ul.countries
+    - location_cities.keys.sort.each do |country|
+      %li.country
+        = link_to_unless params[:in_country] == country, country, locations_path(current_scopes.merge(:in_country => country))
+        %ul.cities
+          - location_cities[country].each do |city|
+            %li.city= link_to_unless params[:in_city] == city.city, city.city, locations_path(current_scopes(:in_city => city.city))

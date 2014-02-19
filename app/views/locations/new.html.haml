@@ -1,0 +1,11 @@
+- content_for :list_title, 'Locations'
+- content_for :details_title, 'New Location'
+- content_for :categories_menu do
+  = render :partial => "menu/locations"
+- content_for :loi_list do
+  = render :partial => "locations/index"
+- content_for :loi_info do
+  - form_for @location, :html => {:multipart => true} do |f|
+    = render :partial => 'form', :locals => {:f => f}
+  = render :partial => "media/edit_media_window"
+  = render :partial => 'media/new'

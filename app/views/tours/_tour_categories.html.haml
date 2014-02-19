@@ -1,0 +1,5 @@
+.tour-categories
+  %b Categories
+  %ul
+    - for category in Location.category_counts
+      %li= link_to category.name, tours_path(:by_category => category.name)

@@ -1,0 +1,69 @@
+<pobs>
+    <pob id="pob1" latitude="51.50072" longitude="-0.12698" iconUrl="" icon="icons/icon1.jpg" name="King's Bakery" closestPublicTransport="" cost="" address="Parliament Square, 1" shortDescription="The most english bakery in the world">
+        
+        <categories>
+            <category id="cat1"/>   <!-- ""Food and Drink"" -->
+            <category id="cat2"/>   <!-- "Restaurant" -->
+            <category id="cat3"/>   <!-- "Suchi" -->
+            <category id="cat4"/>   <!-- "Bar" -->
+        </categories>
+        
+        <description>
+            Long time ago, King Arthur told the guys to build the best bakery shop in the world.
+			They did it near Westminster. Come and try delicious donuts, bread and other bakery
+        </description>
+        
+        <contacts>
+            <contact type="address" value="Address"/>
+            <contact type="phone" value="123456789"/>
+        </contacts>
+        
+        <media>
+            <medium content-type="text/plain" url="media/bakerstory.txt" description="Be careful while cooking"/>
+            <medium content-type="image/jpeg" url="media/bakery.jpg" description="Our assortment"/>
+            <medium content-type="video/mp4" url="media/bakery day.mp4" description="One day from our bakery"/>
+        </media>
+        
+        <workingHours>
+            10:00am - 10:00pm
+        </workingHours>
+        
+        <coupons>
+            <coupon id="coupon1"/>
+            <coupon id="coupon2"/>
+        </coupons>
+        
+    </pob>
+    
+    <pob id="pob2" latitude="51.501974" longitude="-0.12614" iconUrl="" icon="icons/icon2.jpg" name="Book Pizza Shop" closestPublicTransport="" cost="" address="Parliament Street, 2" shortDescription="Amazing! You can eat pizza and read your favourite books, papers and magazines in one place">
+        
+        <categories>
+            <category id="cat5"/>   <!-- "Shopping" -->
+            <category id="cat6"/>   <!-- "Book shop" -->
+        </categories>
+        
+        <description>
+            You think you know pizza because you were in Italy?
+			You should definitely try our homemade pepperoni pizza while reading new Charlie Brooker's article on London Olympics
+        </description>
+        
+        <contacts>
+            <contact type="address" value="Address"/>
+        </contacts>
+        
+        <media>
+            <medium content-type="text/plain" url="media/pepperoni recipe.txt" description="asd"/>
+			<medium content-type="image/jpeg" url="media/pepperoni.jpg" description="asd"/>
+        </media>
+        
+        <workingHours>
+            10:00am - 10:00pm
+        </workingHours>
+        
+        <coupons>
+            <coupon id="coupon3"/>
+        </coupons>
+        
+    </pob>
+    
+</pobs>

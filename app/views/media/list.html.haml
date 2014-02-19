@@ -1,0 +1,23 @@
+%ul.existing-medium-list
+  - collection.each do |medium|
+    %li{:medium_type => medium_css_class(medium),
+        :attachment_file_size => number_to_human_size(medium.attachment_file_size),
+        :id => "existing_medium_#{medium.id}",
+        :class => medium_css_class(medium)}
+      = hidden_field_tag "medium-id", medium.id
+      %a{:href => "#", :onclick => "return false;"}
+        - if "picture" == medium_css_class(medium)
+          .medium-thumb
+            = image_tag "/images/icons/picture.png", :'data-original' => medium.attachment.url(:thumb), :height => 55, :width => 55, :align => 'middle', :class => "lazy"
+        - else
+          .medium-thumb
+            = image_tag "/images/icons/#{medium.attachment_type}.png", :height => 55, :width => 55, :align => 'middle'
+        .medium-name-block
+          %span.medium-name-field{:title => medium.name}
+            = truncate(medium.name, :length => 27)
+        .medium-actions
+          %button.x-btn-text.btn-add{:type => 'button', :onclick => "return markToAdd(this);"} Add
+          .btn-delete.left
+            .medium-state-label Added
+            .delete-link.left{:href => '#', :onclick => "return markToDelete(this);"}
+              .left

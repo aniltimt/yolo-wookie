@@ -1,0 +1,5 @@
+<coupons>
+    <coupon id="coupon1" image="coupons/coupon1.jpg"/>
+    <coupon id="coupon2" image="coupons/coupon2.jpg"/>
+    <coupon id="coupon3" image="coupons/coupon3.png"/>
+</coupons>

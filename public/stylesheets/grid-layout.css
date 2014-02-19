@@ -1,0 +1,268 @@
+body {
+	background-color: #fff;
+}
+.clear {
+	clear: both;
+}
+.left {
+	float: left;
+}
+.right {
+	float: right;
+}
+.bold {
+	font-weight: bold;
+}
+.logo {
+	padding: 5px 0 0 20px;
+	height: 100px;
+	float: left;
+}
+.top-area {
+	float: left;
+	width: 350px;
+	height: 100px;}
+	.title {
+		padding: 21px 0 0 8px;
+		height: 29px;}
+		.management-title {
+			float: left;
+			height: 20px;
+			padding: 7px 0 0 21px;
+		}
+.navigation-bar {
+	height: 30px;
+	width: 550px;
+	position: absolute;
+	top: 70px;
+	left: 97px;
+}
+.account-info {
+	float: right;
+	padding: 13px 8px 0 0;
+	color: #00f;
+	font: normal 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+}
+.account-info a {
+	font-weight: bold;
+}
+.navigation-tab {
+	float: left;
+	width: 95px;
+	margin-right: 6px;}
+	.navigation-tab a{
+		cursor: pointer;
+		color: #000;
+		font: normal 14px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+		text-decoration:none;
+	}
+	.navigation-tab a:hover{
+		font: bold 14px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+	}
+	.navigation-tab-left {
+		float: left;
+		background: url("../images/button-sprite.png") no-repeat scroll 0 -90px transparent;
+		width: 5px;
+		height: 30px;
+	}
+	.navigation-tab-body {
+		float: left;
+		background: url("../images/button-sprite.png") repeat-x scroll 0 -150px transparent;
+		height: 30px;
+		width: 85px;
+		padding-top: 0px;
+	}
+	.navigation-tab-right {
+		float: left;
+		background: url("../images/button-sprite.png") no-repeat scroll 0 -120px transparent;
+		width: 5px;
+		height: 30px;
+	}
+	a:hover .navigation-tab-left, .navigation-tab-left-selected {
+		float: left;
+		background: url("../images/button-sprite.png") no-repeat scroll 0 0 transparent;
+		width: 5px;
+		height: 30px;
+	}
+	a:hover .navigation-tab-body, .navigation-tab-body-selected {
+		float: left;
+		background: url("../images/button-sprite.png") repeat-x scroll 0 -60px transparent;
+		font: bold 14px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+		width: 85px;
+		height: 30px;
+	}
+	a:hover .navigation-tab-right, .navigation-tab-right-selected {
+		float: left;
+		background: url("../images/button-sprite.png") no-repeat scroll 0 -30px transparent;
+		width: 5px;
+		height: 30px;
+	}
+	.navigation-tab-tour, .navigation-tab-locations, .navigation-tab-media {
+        display: block;
+        line-height: 30px;
+        text-align: center;
+	}
+
+
+.menu-container {
+	padding: 20px 10px 10px 20px;
+}
+
+#types-container {
+	margin-top: 20px;
+}
+
+.options-block {
+	font: normal 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;}
+	.options-block li {
+		display: block;
+		padding: 7px 12px;
+		height: 17px;
+		border-bottom: 1px solid #ccc;
+		cursor: pointer;
+	}
+	.options-block li.selected {
+		font-weight: bold;
+		background-color: #cce4ff;
+	}
+	.options-block li a {
+		display: block;
+		width: 119px;
+		color: #000;
+		text-decoration: none;
+	}
+	.options-block li a:hover{
+		font-weight: bold;
+	}
+	
+.options-block-header {
+	padding: 5px 3px 4px 5px;
+	background-color: #999;
+	border-color: #808080;
+	color: #fff;
+	font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+	padding-left: 10px;
+}
+
+.block-header {
+	padding: 5px 3px 4px 5px;
+	background-color: #e6e6e6;
+	border-color: #808080;
+	color: #808080;
+	font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+	padding-left: 10px;	
+}
+
+.text {
+	color: #808080;
+	font: normal 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;	
+}
+
+.remark {
+	color: #808080;
+	font: italic 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;	
+}
+
+.hidden-iframe {
+	width: 0;
+	height: 0;
+	border: 0px solid #fff;
+}
+
+.popup-form-row {
+	height: 30px;}
+	.popup-form-row label {
+		width: 70px;
+		color: #000;
+		font: normal 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+		text-align: right;
+		display: block;
+		float: left;
+		padding: 2px 6px;}
+	input {
+		color: #000;
+		font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+		width: 250px;}
+	a.medium-link {
+		display: block;
+		float: left;
+		padding: 2px 6px;		
+	}
+	span.medium-size {
+		display: block;
+		float: right;
+		padding: 2px 6px;
+		margin-right: 110px;		
+	}
+
+.window-background {
+	background: #fff;
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+.error {
+	color: #FF0000;
+	font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+	padding: 2px;
+	line-height: 1.5;
+	background-color: #FFF9E0;
+	border: 1px solid #FCEFA1;
+}
+
+.errors {
+	color: #FF0000;
+	font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif;
+	margin: 5px 5px 15px 5px;
+	line-height: 1.5;
+}
+
+.edit-link div {
+	width: 21px;
+	height: 21px;
+	background: url("../images/buttons/edit.png") no-repeat transparent;	
+}
+
+.edit-link:hover div {
+	width: 21px;
+	height: 21px;
+	background: url("../images/buttons/edit-hover.png") no-repeat transparent;	
+}
+
+.delete-link div {
+	width: 21px;
+	height: 21px;
+	background: url("../images/buttons/delete.png") no-repeat transparent;	
+}
+
+.delete-link:hover div {
+	width: 21px;
+	height: 21px;
+	background: url("../images/buttons/delete-hover.png") no-repeat transparent;	
+}
+
+.x-grid3-header {
+	background-image: none !important;
+	background-color: #999 !important;
+	color: #fff;
+}
+
+.x-grid3-hd-row td {
+	font: bold 12px Arial,Verdana,Tahoma,Helvetica,sans-serif !important;	
+}
+
+.x-grid3-cell-inner {
+	padding-top: 7px !important;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+#edit-media-win .uploaded_file {
+  float:right;
+  margin:5px;
+  width:380px;
+}

@@ -1,0 +1,379 @@
+<style>
+  ul.selected_tours, ul.published_tours { list-style-type: none; margin: 0; padding: 0; float: left; margin-right: 10px; background: #eee; padding: 5px; width: 252px;}
+	ul.selected_tours li, ul.published_tours li { cursor:move; margin: 5px; padding: 5px; font-size: 1.2em; width: 230px; }
+
+  .selected_tours .ui-state-default .delete_tour {
+    cursor: pointer;
+    float:right;
+    right: 5px;
+    top: 6px;
+    width: 8px;
+    height: 9px;
+    font-size: 1px;
+    background: url(/images/chosen-sprite.png) right top no-repeat;
+  }
+  .selected_tours .ui-state-default .delete_tour:hover {
+    background-position: right -9px;
+  }
+  .selected_tours .ui-state-default .delete_tour {
+    background-position: right -9px;
+  }
+</style>
+
+<div id="overview-container">
+  <div id="overview-block">
+    <span style="color:red">Fields marked with * are required</span>
+    <p><%= f.error_messages %>
+    <div class="form-row">
+      <%= f.label :name, 'Ubertour name', :class => 'required' %>
+      <%= f.text_field :name, :maxlength => 24 %>
+    </div>
+    <div class="form-row">
+      <%= f.label :country, nil %>
+      <%= f.select :country, options_for_select(options_for_country, f.object.country), {}, {:style => "width:350px;", :class => "chzn-select", :onchange => "check_city_bbox('ubertour')"} %>
+    </div>
+    <div class="form-row">
+      <%= f.label :city, nil %>
+      <%= f.text_field :city, :onchange => "check_city_bbox('ubertour')" %>
+      <div id="tour_city_message" style="display:none;border:1px solid red;padding:5px;width:270px;margin-top:-10px;float:left;"></div>
+    </div>
+    <div class="form-textarea-row form-row">
+      <%= f.label :overview, nil, :class => 'required' %>
+      <%= f.text_area :overview %>
+    </div>
+    <div class="form-textarea-row form-row">
+      <%= f.label :info, nil, :class => 'required' %>
+      <%= f.text_area :info %>
+    </div>
+    <div class="form-short-textarea-row form-row">
+      <%= f.label :ubertour_route_type, "Intertour route type", :class => 'required' %>
+      <%= f.select :ubertour_route_type, [["by foot", "foot"], ["by car", "car"]] %>
+    </div>
+    <div class="form-short-textarea-row form-row">
+      <%= f.label :length_in_km, "Distance [km]", :class => 'required' %>
+      <%= f.text_field :length_in_km %>
+    </div>
+    <div class="form-short-textarea-row form-row">
+      <%= f.label :length_in_minutes, "Travel time [minutes]", :class => 'required' %>
+      <%= f.text_field :length_in_minutes %>
+    </div>
+    <div class="form-row">
+      <span class="label required">Tours</span>
+      <div class="locations-buttons">
+        <div id="add-existing-loi-button" class="button-container"></div>
+      </div>
+    </div>
+    <div style="clear:both"></div>
+    <div style="margin-left:122px;float:left;">
+      <div style="width:250px"><span style="font-size:18px;">Available tours</span><br/><span style="font-size:12px;">(select country and/or city to view tours)</span></div>
+      <div style="height:400px;overflow-y:auto;overflow-x:hidden">
+        <ul class="published_tours">
+          <% Tour.by_user(current_user).regular_tours.in_country(@country).in_city(@city).published.each_with_index do |tour, index| %>
+            <% next if @added_tours_list && @added_tours_list.collect{|t| t.id}.include?(tour.id) %>
+            <li class="ui-state-default" id="tour_id_<%= tour.id %>" tour_info="tour_<%= tour.id %>">
+              <div class="loi_details"><span style="width:210px;"><%= tour.name %></span><span class="delete_tour"></span></div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+    <div style="margin-left:20px;border-left:2px dashed crimson;float:left;padding-left:20px;">
+      <div style="width:250px;font-size:18px;height:40px;">Selected tours:</div>
+      <div style="height:400px;overflow-y:auto;overflow-x:hidden">
+        <ul class="selected_tours">
+          <% if ! @added_tours_list.blank? %>
+            <% @added_tours_list.each do |tour| %>
+              <li class="ui-state-default" id="tour_id_<%= tour.id %>" tour_info="tour_<%= tour.id %>">
+                <div class="loi_details"><span style="width:210px;"><%= tour.name %></span><span class="delete_tour"></span></div>
+              </li>
+            <% end %>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+
+    <div style="clear:both"></div>
+
+    <!--input id="locations_order_serialized" type="hidden"/-->
+    <input id="added_tours_list" type="hidden" name="added_tours_list" value="<%= @added_tours_list && @added_tours_list.collect{|t| t.id}.join(',') %>"/>
+
+    <div class="form-row">
+      <span class="label">Preview</span>
+      <div id="lowres_map_container" style="width:577px;height:400px;float:left"></div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  jQuery('.loi_details .delete_tour').live("click", function(el) {
+    var li = jQuery(this).parent().parent();
+    var tour_name = jQuery(jQuery(this).siblings()[0]).html();
+    var tour_id = li.attr('id').match(/\d*$/)[0];
+    li.detach();
+    var id = parseInt(tour_id);
+    added_tour_list.splice(added_tour_list.indexOf(id), 1);
+    show_tours_on_the_maps();
+    jQuery('#added_tours_list').val(added_tour_list.join(','));
+    jQuery('ul.published_tours').append('<li class="ui-state-default" id="tour_id_'+tour_id+'" tour_info="tour_'+tour_id+'"><div class="loi_details"><span style="width:110px;">'+tour_name+'</span><span class="delete_tour"></span></div></li>');
+  });
+
+  var removed_or_received_callbacks_called = false;
+
+  jQuery( "ul.selected_tours" ).sortable({
+	  connectWith: "ul",
+    cursor: 'crosshair',
+    remove: function(event, ui) {
+      removed_or_received_callbacks_called = true;
+      console.log('remove');
+      var matched = ui.item[0].id.match(/\d*$/);
+      jQuery(ui.item[0]).css({color: ''});
+      if(matched.length > 0) {
+        var id = parseInt(matched[0]);
+        added_tour_list.splice(added_tour_list.indexOf(id), 1);
+        show_tours_on_the_maps();
+        jQuery('#added_tours_list').val(added_tour_list.join(','));
+      }
+    },
+    receive: function(event, ui) {
+      removed_or_received_callbacks_called = true;
+      console.log('receive');
+      var matched = ui.item[0].id.match(/\d*$/);
+      if(matched.length > 0) {
+        var id = parseInt(matched[0]);
+        added_tour_list.push(id);
+        show_tours_on_the_maps(ui);
+        jQuery('#added_tours_list').val(added_tour_list.join(','));
+      }
+    },
+    update: function(event, ui) {
+      console.log('update');
+      if(!removed_or_received_callbacks_called) {
+        var selected_tours = jQuery('ul.selected_tours li');
+        added_tour_list = [];
+        for(var i = 0; i < selected_tours.length; i++) {
+          var matched = selected_tours[i].id.match(/\d*$/);
+          if(matched.length > 0) {
+            var id = parseInt(matched[0]);
+            added_tour_list.push(id);
+          }
+        }
+        show_tours_on_the_maps();
+        jQuery('#added_tours_list').val(added_tour_list.join(','));
+      } else {
+        removed_or_received_callbacks_called = false;
+      }
+    }
+  });
+
+  jQuery( "ul.published_tours" ).sortable({
+    connectWith: "ul",
+    cursor: 'crosshair'
+  });
+
+  jQuery('#locations_order_serialized').val(jQuery( "#sortable" ).sortable( "serialize", {attribute: "loi_info", expression: /(location)_(\d*_\d*)/} ));
+
+  jQuery( "#sortable" ).disableSelection();
+    
+  function saveFormItem() {
+    if(added_tour_list.length < 2) {
+      alert('Please select at least 2 tour associated with this ubertour!')
+    } else {
+      document.getElementById('new_tour').submit();
+    }
+  }
+
+  var map;
+
+  Ext.onReady(function() {
+    jQuery(".chzn-select").chosen();
+
+    var published_tours_height = jQuery('.published_tours').height();
+    if(jQuery('.selected_tours').height() < published_tours_height) {
+      jQuery('.selected_tours').height(published_tours_height + 'px');
+    }
+
+    map = new L.Map('lowres_map_container', {
+      center: new L.LatLng(51.50757, -0.1078), 
+      zoom: 14
+    });
+
+    var cloudmadeUrl = 'http://107.20.174.7:81/osm_tiles2/{z}/{x}/{y}.png',
+        cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18});
+
+    map.addLayer(cloudmade);
+
+    if(<%= !@ubertour.errors.blank? %> && <%= !@added_tours_list.blank? %>) {
+      added_tour_list.push(<%= @added_tours_list.blank? ? '' : @added_tours_list.collect{|t| t.id}.join(',') %>);
+      show_tours_on_the_maps();
+    } else if(<%= !@ubertour.children.empty? %>) {
+      added_tour_list.push(<%= @ubertour.children.collect{|t| t.id}.join(',') %>);
+      show_tours_on_the_maps();
+    }
+  });
+
+  function checkSelectedLOIs() {
+    var existingLOIs = Ext.DomQuery.select('.existing-locations-list li');
+
+    for (var i=0; i<existingLOIs.length; i++){
+      var loi = Ext.get(existingLOIs[i]);
+      var loiId = loi.child("input[name=loi-id]").dom.value;
+      if(added_loi_list.indexOf(parseInt(loiId)) != -1) {
+        loi.addClass("added");
+        loi.addClass("x-hidden");
+      }
+    }
+
+    var locations_list_container = jQuery('.locations_status_bar');
+    if(jQuery('.existing-locations-list').length > 0) {
+      if(jQuery('.existing-locations-list li').length == 0) {
+        locations_list_container.html('<p>Found no LOIs for ' + jQuery('#tour_city').val() + ', ' + jQuery('#tour_country').val() + '</p>');
+      } else if(jQuery('.existing-locations-list li').length == jQuery('.existing-locations-list li.x-hidden').length) {
+        locations_list_container.html('<p>All LOIs for ' + jQuery('#tour_city').val() + ', ' + jQuery('#tour_country').val() + ' are already added</p>');
+      } else {
+        locations_list_container.html('');
+      }
+    }
+  }
+  
+  var deleted_items_list = [];
+
+  if(<%= ! @deleted_items.blank? %>) {
+    deleted_items_list.push(<%= @deleted_items %>);
+    jQuery('#deleted_items_list').val(deleted_items_list.join(','));
+  }
+
+  function addLOIsToList() {
+    var existingLOIs = Ext.DomQuery.select('.existing-locations-list li');
+    
+    for (var i=0; i < existingLOIs.length; i++){
+      var loi = Ext.get(existingLOIs[i]);
+      var loiId = loi.child("input[name=loi-id]").dom.value;
+      if (loi.hasClass("added")){
+        if(added_loi_list.indexOf(parseInt(loiId)) == -1) {
+          added_loi_list.push(parseInt(loiId));
+          appendLocationToList(loiId);
+        }
+      }
+    }
+    jQuery('#locations_order_serialized').val(jQuery( "#sortable" ).sortable( "serialize", {attribute: "loi_info", expression: /(location)_(\d*_\d*)/} ));
+    show_tours_on_the_maps();
+  }
+
+  <%= render :partial => "shared_js" %>
+
+  tabsWin = null;
+  
+  function tours_in_selected_place() {
+    var in_country = jQuery('#ubertour_country').val();
+    var in_city = jQuery('#ubertour_city').val();
+    var in_place = '';
+    if(in_country != '') { 
+      in_place += '&in_country='+in_country 
+    }
+    if(in_city != '') { 
+      in_place += '&in_city='+encodeURIComponent(in_city) 
+    }
+    return in_place;
+  }
+
+  /*function addExistingTours() {
+    if ( !tabsWin) {
+      tabsWin = new Ext.Window({
+        title: 'Add Existing Tours for '+jQuery('#tour_city').val()+', '+jQuery('#tour_country').val(),
+        closable:true,
+        width:377,
+        height:400,
+        plain:true,
+        region: 'center',
+        layout: 'fit',
+        defaults:{autoScroll:true},
+        modal: true,
+        items:[{
+          iconCls: 'location-tab',
+          listeners: {
+            render: function() {
+              searchButton = new Ext.Button({renderTo:'search-button-container',
+                text: 'Search',
+                width: 65,
+                handler: function(){
+                  jQuery('.search_spinner').show();
+                  jQuery('.locations_status_bar').html('');
+                  Ext.Ajax.request({
+                    url : '/tours/search?term='+encodeURIComponent(jQuery('#tour_search').val())+tours_in_selected_place(),
+                    params: {format: 'json'},
+                    method: 'GET',
+                    success: function ( result, request ) {
+                      $('.search_spinner').hide();
+                      var res = Ext.util.JSON.decode(result.responseText), res_ids = [];
+                      for(var i = 0; i < res.length; i++) { console.log(res[i]['id']);res_ids.push(res[i]['id']) }; // ['location']
+                      var allMedia = Ext.DomQuery.select('.existing-tours-list li');
+                      var selected_locations_ids = added_loi_list;
+                      for (var i = 0; i < allMedia.length; i++){
+                        var curMedia = Ext.get(allMedia[i]);
+                        var curMediaId = parseInt(curMedia.child("input[name=tour-id]").dom.value);
+                        if (res_ids.indexOf(curMediaId) == -1 || selected_locations_ids.indexOf(curMediaId) != -1) {
+                          curMedia.addClass("x-hidden");
+                        } else {
+                          curMedia.removeClass("x-hidden");
+                        }
+                      }
+                      var locations_list_container = jQuery('.locations_status_bar');
+                      if(jQuery('.existing-tours-list li').length == 0 || jQuery('.existing-tours-list li').length == jQuery('.existing-tours-list li.x-hidden').length) {
+                        locations_list_container.html('<p>This query returned no media for ' + jQuery('#ubertour_city').val() + ', ' + jQuery('#ubertour_country').val() + '</p>');
+                      } else {
+                        locations_list_container.html('');
+                      }
+                    },
+                    failure: function ( result, request) { 
+                      Ext.MessageBox.alert('Failed ', result.responseText); 
+                    } 
+                  });
+                }
+              });
+
+              this.load({
+                url: '/tours.js?'+tours_in_selected_place(),
+                text: 'Loading Existing Ubertours...',
+                callback: checkSelectedLOIs
+              })
+            }
+          }
+        }],
+        closeAction: 'close',
+        fbar: [{
+          text: 'Cancel',
+          handler: function(){ closeAddExistingLOIWindow() }
+        },{
+          html: '<div style="height:18px;float:left;"><div class="search_spinner" style="display:none"><img src="/images/spinner.gif" alt="Please wait"/> Searching</div><div class="locations_status_bar"></div></div><div style="clear:both"></div> <div class="search-bar" style="float:left;width:190px;background-color:#ced9e7;"><div class="left"><input type="text" name="tour_search" id="tour_search"/></div><div id="search-button-container" class="left search-button-container"></div></div><div class="clear"></div>'
+        },{
+          text: 'Ok',
+          handler: function(){addLOIsToList(); closeAddExistingLOIWindow() }
+        }]
+      });
+    }
+
+    tabsWin.on('beforeclose', function(){ tabsWin = null;}, this);
+    tabsWin.show(this);
+    checkSelectedLOIs();
+  }*/
+
+  function closeAddExistingLOIWindow() {
+    tabsWin.close(this);
+    tabsWin = null;
+  }
+
+  function getFBar() {
+    return [
+    {
+      text: 'Cancel',
+      handler: function(){
+        location.href = "/ubertours/<%= @ubertour.id %>";
+      }
+    },
+    '->',
+    {
+      text: 'Save',
+      handler: function(){saveFormItem();}
+    }]
+  }
+</script>

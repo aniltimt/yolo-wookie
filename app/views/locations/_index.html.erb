@@ -1,0 +1,24 @@
+<div id="loi-list">
+  <% if collection.empty? %>
+    <span class="remark">No locations yet</span>
+  <% else %>
+    <ul>
+      <%= render :partial => 'location', :collection => collection %>
+    </ul>
+  <% end %>
+</div>
+
+<script type="text/javascript">
+  <% if @location %>
+  if(jQuery("#location_li_<%=@location.id%>").length > 0) {
+    jQuery("#location_li_<%=@location.id%>").addClass('selected');
+  }
+  <% end %>
+
+  // Very stupid hack (inspired by Marjan's code)
+  setTimeout(function() {
+    if($('#list-panel').find('.selected').length !== 0) {
+      $('#list-panel').parent().scrollTo($('#list-panel').find('.selected'));
+    }
+  }, 500);
+</script>

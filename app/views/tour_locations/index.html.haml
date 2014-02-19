@@ -1,0 +1,12 @@
+%h3 Locations for #{@tour.name}
+
+%ol
+  - for tour_location in @tour_locations do
+    %li
+      = tour_location.location.name
+      = tour_location.position
+
+      %br
+      = button_to 'Move up', move_up_tour_location_path(@tour, tour_location), :method => :put
+      |
+      = button_to 'Move down', move_down_tour_location_path(@tour, tour_location), :method => :put

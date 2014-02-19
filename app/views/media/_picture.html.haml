@@ -1,0 +1,4 @@
+.medium.picture
+  - unless picture.description.blank?
+    %p= picture.description
+  = image_tag picture.attachment.url

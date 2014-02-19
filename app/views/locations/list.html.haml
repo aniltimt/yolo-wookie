@@ -1,0 +1,23 @@
+%ul.existing-locations-list
+  - collection.each do |loi|
+    - if !loi.is_draft?
+      %li{:id => "existing_loi_#{loi.id}"}
+        = hidden_field_tag "loi-id", loi.id      
+        %a{:href => "#", :onclick => "return false;"}
+          .loi-thumb
+            - if loi.thumbnail?
+              = image_tag loi.thumbnail.url
+            - else
+              = image_tag ("/images/default/s.gif", :size => "30x30", :alt => "")
+          .loi-name-block
+            %span.loi-name-field
+              = loi.name
+            %br
+            %span.loi-comment-field= loi.comment
+          .loi-actions          
+            %button.x-btn-text.btn-add{:type => 'button', :onclick => "return markToAdd(this);"} Add
+            .btn-delete.left
+              .loi-state-label Added
+              .delete-link.left{:href => '#', :onclick => "return markToDelete(this);"}
+                .left
+

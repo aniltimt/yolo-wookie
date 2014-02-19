@@ -1,0 +1,66 @@
+.navigation-tab
+  %a{:href => '/media'}
+    - if 'media' == params[:controller]
+      .navigation-tab-left-selected
+      .navigation-tab-body-selected
+        %span.navigation-tab-media Media
+      .navigation-tab-right-selected
+    - else
+      .navigation-tab-left
+      .navigation-tab-body
+        %span.navigation-tab-media Media
+      .navigation-tab-right
+    .clear
+.navigation-tab
+  %a{:href => '/locations'}
+    - if 'locations' == params[:controller]
+      .navigation-tab-left-selected
+      .navigation-tab-body-selected
+        %span.navigation-tab-locations Locations
+      .navigation-tab-right-selected
+    - else
+      .navigation-tab-left
+      .navigation-tab-body
+        %span.navigation-tab-locations Locations
+      .navigation-tab-right
+    .clear
+.navigation-tab
+  %a{:href => '/tours'}
+    - if 'tours' == params[:controller]
+      .navigation-tab-left-selected
+      .navigation-tab-body-selected
+        %span.navigation-tab-tour Tours
+      .navigation-tab-right-selected
+    -else
+      .navigation-tab-left
+      .navigation-tab-body
+        %span.navigation-tab-tour Tours
+      .navigation-tab-right
+    .clear
+.navigation-tab
+  %a{:href => '/ubertours'}
+    - if 'ubertours' == params[:controller]
+      .navigation-tab-left-selected
+      .navigation-tab-body-selected
+        %span.navigation-tab-tour Übertours
+      .navigation-tab-right-selected
+    -else
+      .navigation-tab-left
+      .navigation-tab-body
+        %span.navigation-tab-tour Übertours
+      .navigation-tab-right
+    .clear
+.navigation-tab{:style => "width:130px"}
+  %a{:href => '/aws'}
+    - if 'aws' == params[:controller]
+      .navigation-tab-left-selected
+      .navigation-tab-body-selected{:style => "width:120px"}
+        %span.navigation-tab-media Routing Server
+      .navigation-tab-right-selected
+    - else
+      .navigation-tab-left
+      .navigation-tab-body{:style => "width:120px"}
+        %span.navigation-tab-media Routing Server
+      .navigation-tab-right
+    .clear
+.clear

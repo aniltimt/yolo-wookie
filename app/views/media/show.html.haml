@@ -1,0 +1,6 @@
+%h3= @medium.name
+
+= render_media @medium
+
+%destroy-media
+  = button_to "Destroy", resource_path(@medium), :method => :delete

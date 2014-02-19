@@ -1,0 +1,15 @@
+page << "uploaded = [{type: '#{@medium.attachment_type}', path: '#{@medium.attachment_url}'}]"
+page << "uploaded_files = 1; showAddMetaInfoWin(); $('.remove_upload').hide();"
+page << "jQuery('#edit_media_form').attr('action', '#{medium_url(@medium.id)}');"
+page << "jQuery('.edit_medium_name').each(function(){jQuery(this).val('#{@medium.name}');});"
+page << "jQuery('.medium_country').each(function(){jQuery(this).val('#{@medium.country}');});"
+if !@medium.country.blank?
+page << "jQuery('.medium_city').removeAttr('disabled').each(function(){jQuery(this).val('#{@medium.city}');});"
+end
+page << "jQuery('.uploaded').attr('src', '#{@medium.attachment.url}');" if @medium.attachment_type == 'picture'
+page << "jQuery('#edit_medium_link').attr('href', '#{@medium.attachment.url}');"
+page << "jQuery('#edit_medium_link').html('#{@medium.attachment_file_name}');"
+page << "jQuery('#edit_medium_size').html('#{number_to_human_size(@medium.attachment_file_size)}');"
+page << "jQuery('#media_keywords').val('#{@medium.tag_list}');"
+page << "jQuery('#edit_medium_credits').val('#{@medium.credits}');"
+page.call "showEditMediaWin"

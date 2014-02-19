@@ -1,0 +1,5 @@
+.medium{"id" => "medium-#{medium.id}"}
+  %span#name= medium.name
+  %span#link= link_to medium.attachment.original_filename, medium.attachment.url
+  %span#tags= medium.tag_list
+  %span#size= number_to_human_size medium.attachment_file_size

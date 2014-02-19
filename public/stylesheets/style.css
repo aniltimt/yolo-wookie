@@ -1,0 +1,109 @@
+.build_info {
+  position:absolute;
+  left:10px;
+  top:10px;
+  width:130px;
+  background-color: wheat;
+  color: #555;
+}
+
+.login_container {
+  width:230px;
+  margin: 7em auto;
+}
+
+/*----------------------------------*/
+
+.drop-shadow {
+    position:relative;
+    float:left;
+    /*width:40%;  */
+    padding:1em; 
+    margin:2em 10px 4em; 
+    background:#fff;
+    -webkit-box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+        -moz-box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+            box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+}
+
+.drop-shadow:before,
+.drop-shadow:after {
+    content:"";
+    position:absolute; 
+    z-index:-2;
+}
+
+/*.drop-shadow p {
+    font-size:16px;
+    font-weight:bold;
+}*/
+
+.raised {
+  -webkit-box-shadow: 0 15px 10px -10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+  -moz-box-shadow: 0 15px 10px -10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+  box-shadow: 0 15px 10px -10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+}
+
+.drop-shadow:before,
+.drop-shadow:after {
+    content:"";
+    position:absolute; 
+    z-index:-2;
+}
+
+/* Curved shadows */
+
+.curved {
+    position:relative;
+    padding:1em; 
+    margin:0 10px 0; 
+    background:#fff;
+    -webkit-box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+        -moz-box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+            box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+}
+
+.curved:before {
+  top:10px;
+  bottom:10px;
+  left:0;
+  right:50%;
+  -webkit-box-shadow:0 0 15px rgba(0,0,0,0.6);
+  -moz-box-shadow:0 0 15px rgba(0,0,0,0.6);
+  box-shadow:0 0 15px rgba(0,0,0,0.6);
+  -moz-border-radius:10px / 100px;
+  border-radius:10px / 100px;
+}
+        
+.curved-vt-2:before {
+  right:0;
+}
+
+#sortable { list-style-type: none; margin: 0 0 0 118px; padding: 0; width: 60%; }
+#sortable li { cursor: ns-resize; width:550px; margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 14px; height: 18px; }
+#sortable li span { position: absolute; margin-left: -1.3em; }
+#sortable li .delete_btn {float:right;width:35px;}
+#sortable li .delete_btn a {color:red;}
+#sortable li .loi_details {float:left;overflow:hidden;width:510px;height:20px;}
+
+#sortable li .delete_btn {
+  float:right;
+  right: 5px;
+  cursor:pointer;
+  top: 6px;
+  width: 8px;
+  height: 9px;
+  font-size: 1px;
+  background: url(/images/chosen-sprite.png) right top no-repeat;
+}
+#sortable li .delete_btn:hover {
+  background-position: right -9px;
+}
+#sortable li .delete_btn {
+  background-position: right -9px;
+}
+
+.chzn-container .chzn-results {
+  float:left;
+  width:98%;
+}

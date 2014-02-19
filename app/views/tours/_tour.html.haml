@@ -1,0 +1,20 @@
+%li{:id => "tour_li_#{tour.id}"}
+  %a{:href => tour_path(tour, current_scopes)}
+    .minimize-btn{:onclick => "return minimize(this);", :style => 'display:none'}
+      = "minimize"
+    .maximize-btn{:onclick => "return maximize(this);"}
+      = "maximize"
+    .loi-only-name
+      = tour.name
+    .loi-status{:class => "loi-#{tour_status(tour)}"}
+      = tour.updated_at.strftime("%d.%m.%Y")
+  %ul.tour-locations-list{:style => "display: none;"}
+    - for loi in tour.tour_locations do
+      %li
+        .loi-thumb
+          - if loi.location.thumbnail?
+            = image_tag loi.location.thumbnail.url
+        .loi-name
+          = loi.location.name
+          %br
+          %span.loi-comment= loi.location.comment

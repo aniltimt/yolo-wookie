@@ -1,0 +1,30 @@
+- content_for :title, 'Sign in'
+.login_form
+  - form_for @user_session, :url => user_session_path do |f|
+
+    - unless @user_session.errors.empty?
+      .errors= f.error_messages
+
+    .popup-form-row#email
+      = f.label :email
+      = f.text_field :email
+    .popup-form-row#password
+      = f.label :password
+      = f.password_field :password
+    #submit-container.popup-form-row
+
+:javascript
+  Ext.onReady(function() {
+    buttonObject = new Ext.Button({
+      renderTo:'submit-container',
+      id: 'user_session_submit',
+      name: 'user_session_submit',
+      text: 'Login',
+      width: 100,
+      type: 'submit',
+      handler: function(){
+        document.getElementById('new_user_session').submit();
+      }
+    });
+  });
+

@@ -1,0 +1,10 @@
+- tour_cities = Tour.country_cities.group_by(&:country)
+.tour-cities
+  %strong Cities
+  %ul.countries
+    - tour_cities.keys.sort.each do |country|
+      %li.country
+        = link_to_unless params[:in_country] == country, country, tours_path(:in_country => country)
+        %ul.cities
+          - tour_cities[country].each do |city|
+            %li.city= link_to_unless params[:in_city] == city.city, city.city, tours_path(:in_city => city.city)

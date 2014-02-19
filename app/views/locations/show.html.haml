@@ -1,0 +1,235 @@
+- content_for :list_title, 'Locations'
+- content_for :details_title, 'LOI info'
+- content_for :categories_menu do
+  = render :partial => "menu/locations"
+- content_for :loi_list do
+  = render :partial => "locations/index"
+
+
+- content_for :loi_info do
+  #overview-container
+    #overview-block.x-hidden
+      .form-row
+        %span.label Location name
+        %span.bold= @location.name
+      .form-row
+        %span.label Country
+        %span.bold= country_from_iso_code(@location.country)
+      .form-row
+        %span.label City
+        %span.bold= @location.city
+      .form-row
+        %span.label Address
+        %span.bold=@location.address
+      .form-row
+        %span.label Thumbnail
+        %span.form-image-thumb
+          - if @location.thumbnail?
+            = image_tag @location.thumbnail.original.url
+      .form-row
+        %span.label Comment
+        %span.input= @location.comment
+      .form-row
+        %span.label Categories
+        %span.input= @location.category_list
+      .form-row
+        %span.label Lat Lon
+        %span.bold= @location.latlng.to_s
+  #map-container{:style => "width:750px;margin-left:25px;"}
+    #map-block.x-hidden
+
+  #details-container
+    #details-block.x-hidden
+      .form-short-textarea-row.form-row
+        %span.label Short description
+        %span= @location.short_description
+      .form-row
+        %span.label Phone
+        %span= @location.phone
+      .form-row
+        %span.label Website
+        %span= @location.website
+      .form-row
+        %span.label Email
+        %span= @location.email
+      .form-row
+        %span.label Opening hours
+        %span= @location.opening_hours
+      .form-row
+        %span.label Entrance fee
+        %span= @location.entrance_fee
+      .form-row
+        %span.label Nearest Tube st.
+        %span= @location.nearest_transport
+      .form-textarea-row.form-row
+        %span.label Long description
+        %span= @location.full_description
+  #media-container
+    #media-block.x-hidden
+      #media-list
+        .table-list#media-list-table
+          = hidden_field_tag 'location[medium_ids][]', ""
+          - @location.media.each do |medium|
+            %a.media-row{:target => "blank", :href => medium.attachment.url}
+              .media-actions
+                .left.media-size= number_to_human_size(medium.attachment_file_size)
+              .media-name{:class => "media-type-#{medium_css_class(medium)}"}
+                %span= medium.name
+              .clear
+          - if @location.media.empty?
+            %span.remark.media-row No Media attached.
+  %form.x-hidden{:method => 'post', :id => 'location_delete_form'}
+    %input{:type => 'hidden', :name => '_method', :value => 'delete'}
+    %input{:type => 'hidden', :name => 'authenticity_token', :value => form_authenticity_token}
+
+  :javascript
+    var cloudmadeUrl = 'http://107.20.174.7:81/osm_tiles2/{z}/{x}/{y}.png',
+        cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18});
+
+    var map = new L.Map('map-block');
+    map.addLayer(cloudmade);
+
+    var lat = "#{@location.lat}";
+    var lng = "#{@location.lng}";
+    if (lat && lng) {
+      var markerLatLng = new L.LatLng(lat, lng);
+
+      var MyIcon = L.Icon.extend({
+        iconUrl: '/javascripts/leaflet/images/marker.png',
+        shadowUrl: '/javascripts/leaflet/images/marker-shadow.png',
+        iconSize: new L.Point(25, 41),
+        shadowSize: new L.Point(41, 41)
+      });
+
+      var icon = new MyIcon();
+      marker = new L.Marker(markerLatLng, {title: '#{ escape_javascript @location.name }', icon: icon});
+      map.addLayer(marker);
+      map.setView(markerLatLng, 15);
+    } else {
+      map.setView(new L.LatLng(51.50757, -0.1078), 15);
+    }
+
+    function addExistingMedia() {
+      var tabs = new Ext.TabPanel({
+        region: 'center',
+        margins:'3 3 3 0',
+        activeTab: 0,
+        defaults:{autoScroll:true},
+        items:[{
+          title: 'Bogus Tab',
+          html: '<h1>Bogus Tab</h1>'
+        },{
+          title: 'Another Tab',
+          html: '<h1>Aeton Tab</h1>'
+        },{
+          title: 'Closable Tab',
+          html: '<h1>cols Tab</h1>',
+          closable:true
+        }]
+      });
+
+      // Panel for the west
+      var nav = new Ext.Panel({
+        title: 'Navigation',
+        region: 'west',
+        split: true,
+        width: 200,
+        collapsible: true,
+        margins:'3 0 3 3',
+        cmargins:'3 3 3 3'
+      });
+
+      var win = new Ext.Window({
+        title: 'Layout Window',
+        closable:true,
+        width:600,
+        height:350,
+        //border:false,
+        plain:true,
+        layout: 'border',
+        modal: true,
+        items: [nav, tabs]
+      });
+
+      win.show(this);
+    }
+
+    Ext.onReady(function() {
+      new Ext.Panel({
+        renderTo: 'overview-container',
+        title: 'Overview',
+        contentEl: 'overview-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        }
+      });
+
+      new Ext.Panel({
+        renderTo: 'map-container',
+        title: 'Map',
+        contentEl: 'map-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        }
+      });
+
+      new Ext.Panel({
+        renderTo: 'details-container',
+        title: 'Details',
+        contentEl: 'details-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        }
+      });
+
+      new Ext.Panel({
+        renderTo: 'media-container',
+        title: 'Media',
+        contentEl: 'media-block',
+        collapsible: true,
+        headerCfg: {
+          cls: 'block-header'
+        },
+        layoutConfig: {
+          align : 'stretch'
+        }
+      });
+    });
+    
+    var deleteButton = '';
+    if (#{@location.deletable?}) {
+      deleteButton = {
+        text: 'Delete LOI',
+        handler: function(){
+          if (confirm ('Are you sure you want to delete this location?')) {
+              var form = document.getElementById('location_delete_form');
+              form.submit();
+          }
+          return false;
+        }
+      }
+    }
+
+    function getFBar() {
+      return [
+      deleteButton,
+      '->',
+      {
+        text: 'Edit LOI',
+        handler: function(){
+          location.href =  "/locations/#{@location.id.to_s}/edit";
+        }
+      }]
+    }

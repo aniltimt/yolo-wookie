@@ -1,0 +1,107 @@
+#overview-container
+  #overview-block.x-hidden
+#map-container
+  #map-block.x-hidden
+#details-container
+  #details-block.x-hidden
+#media-container
+
+    
+:javascript
+
+  function addExistingMedia() {
+    alert('add existing media');
+    var tabs = new Ext.TabPanel({
+      region: 'center',
+      margins:'3 3 3 0', 
+      activeTab: 0,
+      defaults:{autoScroll:true},
+      items:[{
+        title: 'Bogus Tab',
+        html: '<h1>Bogus Tab</h1>'
+      },{
+        title: 'Another Tab',
+        html: '<h1>Aeton Tab</h1>'
+      },{
+        title: 'Closable Tab',
+        html: '<h1>cols Tab</h1>',
+        closable:true
+      }]
+    });
+
+    // Panel for the west
+    var nav = new Ext.Panel({
+      title: 'Navigation',
+      region: 'west',
+      split: true,
+      width: 200,
+      collapsible: true,
+      margins:'3 0 3 3',
+      cmargins:'3 3 3 3'
+    });
+
+    var win = new Ext.Window({
+      title: 'Layout Window',
+      closable:true,
+      width:600,
+      height:350,
+      //border:false,
+      plain:true,
+      layout: 'border',
+      modal: true,
+      items: [nav, tabs]
+    });
+
+    win.show(this);
+  }
+
+  Ext.onReady(function() {
+    buttonObject = new Ext.Button({renderTo:'add-existing-media-button',
+      text: 'Add existing',
+      width: 145,
+      handler: function(){addExistingMedia();}
+    });
+
+    new Ext.Panel({
+      renderTo: 'overview-container',
+      title: 'Overview',
+      contentEl: 'overview-block',
+      collapsible: true,
+      headerCfg: {
+        cls: 'block-header'
+      },
+      layoutConfig: {
+        align : 'stretch'
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'details-container',
+      title: 'Details',
+      contentEl: 'details-block',
+      collapsible: true,
+      headerCfg: {
+        cls: 'block-header'
+      },
+      layoutConfig: {
+        align : 'stretch'
+      }
+    });
+
+    new Ext.Panel({
+      renderTo: 'media-container',
+      title: 'Media',
+      contentEl: 'media-block',
+      collapsible: true,
+      headerCfg: {
+        cls: 'block-header'
+      },
+      layoutConfig: {
+        align : 'stretch'
+      }
+    });
+  });
+
+  function getFBar(){
+    return [];
+  }

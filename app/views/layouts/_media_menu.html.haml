@@ -1,0 +1,41 @@
+#upload-new-media-button.new-button
+
+
+
+#types-container
+
+#types.x-hidden
+  %ul.options-block
+    - all_media_blank = no_media_filter?
+    %li{:class => all_media_blank ? 'selected' : nil}
+      = link_to_unless all_media_blank, 'All', media_path
+    %li{:class => params[:videos]=='true' ? 'selected' : nil}
+      = link_to_unless params[:videos]=='true', '<img src="/images/icons/video.png" align="absmiddle"/> Videos', video_media_path
+    %li{:class => params[:pictures]=='true' ? 'selected' : nil}
+      = link_to_unless params[:pictures]=='true', '<img src="/images/icons/picture.png" align="absmiddle"/> Pictures', picture_media_path
+    %li{:class => params[:audios]=='true' ? 'selected' : nil}
+      = link_to_unless params[:audios]=='true', '<img src="/images/icons/audio.png" align="absmiddle"/> Audios', audio_media_path
+    %li{:class => params[:text_pages]=='true' ? 'selected' : nil}
+      = link_to_unless params[:text_pages]=='true', '<img src="/images/icons/textpage.png" align="absmiddle"/> Text pages', text_page_media_path
+
+:javascript
+
+  Ext.onReady(function() {
+
+    buttonObject = new Ext.Button({renderTo:'upload-new-media-button',
+      text: 'Upload New Media',
+      width: 145,
+      handler: function(){showAddMediaWin();}
+    });
+
+    new Ext.Panel({
+      renderTo: 'types-container',
+      width: 145,
+      title: 'By types',
+      contentEl: 'types',
+      collapsible: true,
+      headerCfg: {
+        cls: 'options-block-header'
+      }
+    });
+  });
